@@ -1,0 +1,30 @@
+body {
+    font-family: system-ui;
+    background-color: #1a6f40;
+    color: #ffffff;
+    font-size: 20px;
+}
+
+a {
+    text-decoration: none;
+}
+
+ul {
+    list-style-type: none;
+}
+
+header{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.profile-nav ul {
+    display: flex;
+    gap: 1.2rem;
+}
+
+.menu-nav ul {
+    display: flex;
+    gap: 1.2rem;
+}
