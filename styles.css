@@ -1,3 +1,9 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
 body {
     font-family: system-ui;
     background-color: #1a6f40;
@@ -17,14 +23,52 @@ header{
     display: flex;
     align-items: center;
     justify-content: space-between;
+    background-color: #268751;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    padding: 0.8rem 1.2rem;
 }
 
 .profile-nav ul {
     display: flex;
     gap: 1.2rem;
+    flex-wrap: wrap;
 }
 
 .menu-nav ul {
     display: flex;
     gap: 1.2rem;
+    flex-wrap: wrap;
+}
+
+.menu-block {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 30px;
+    flex-wrap: wrap;
+    padding: 2rem 1rem;
+}
+
+.menu-block a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: clamp(140px, 22vw, 300px);
+    height: clamp(140px, 22vw, 300px);
+    border: 2px solid #ffffff;
+    border-radius: 8px;
+    padding: 0.5rem;
+    margin: 2rem auto;
+}
+
+.menu-block a, .menu-block a:visited, .menu-block a:active , header h1 a:visited, header h1 a:active{
+    color: #ffffff;
+}
+
+.menu-block a:hover {
+    cursor: pointer;
+    background-color: #2fb35f;
+    color: #ffffff;
+    border-color: #2fb35f;
 }
