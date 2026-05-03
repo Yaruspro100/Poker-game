@@ -19,14 +19,25 @@ ul {
     list-style-type: none;
 }
 
-header{
+header {
     display: flex;
-    align-items: center;
+    align-items: stretch;
     justify-content: space-between;
     background-color: #268751;
     gap: 0.5rem;
     flex-wrap: wrap;
-    padding: 0.8rem 1.2rem;
+    padding: 0 1.2rem;
+}
+
+header h1 {
+    display: flex;
+    align-items: center;
+    padding: 0.8rem 0;
+}
+
+.profile-nav {
+    display: flex;
+    align-items: center;
 }
 
 .profile-nav ul {
@@ -35,17 +46,38 @@ header{
     flex-wrap: wrap;
 }
 
+.menu-nav {
+    display: flex;
+    align-items: stretch;
+}
+
 .menu-nav ul {
     display: flex;
-    gap: 1.2rem;
+    gap: 0;
     flex-wrap: wrap;
+    align-items: stretch;
+}
+
+.menu-nav ul li {
+    display: flex;
+}
+
+.menu-nav ul li a {
+    display: flex;
+    align-items: center;
+    padding: 0 1.2rem;
+}
+
+.menu-nav ul li a:hover {
+    background-color: #2fb35f;
+    cursor: pointer;
 }
 
 .menu-block {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 30px;
+    gap: 50px;
     flex-wrap: wrap;
     padding: 2rem 1rem;
 }
@@ -58,11 +90,13 @@ header{
     height: clamp(140px, 22vw, 300px);
     border: 2px solid #ffffff;
     border-radius: 8px;
-    padding: 0.5rem;
+    padding: 0.5rem; 
     margin: 2rem auto;
 }
 
-.menu-block a, .menu-block a:visited, .menu-block a:active , header h1 a:visited, header h1 a:active{
+.menu-block a, .menu-block a:visited, .menu-block a:active, 
+.menu-nav a, .menu-nav a:visited, .menu-nav a:active, 
+header h1 a:visited, header h1 a:active {
     color: #ffffff;
 }
 
@@ -71,4 +105,53 @@ header{
     background-color: #2fb35f;
     color: #ffffff;
     border-color: #2fb35f;
+}
+
+main article {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
+    line-height: 1.7;
+}
+
+main article h2 {
+    font-size: 2.2rem;
+    margin-bottom: 2rem;
+    text-align: center;
+    color: #ffffff;
+}
+
+main article h3 {
+    font-size: 1.5rem;
+    margin: 2.5rem 0 1rem 0;
+    color: #4ade80;
+}
+
+main article h4 {
+    font-size: 1.25rem;
+    margin: 1.8rem 0 0.8rem 0;
+    color: #90ee90;
+}
+
+main article p {
+    margin-bottom: 1.2rem;
+    font-size: 1.05rem;
+}
+
+main article ul {
+    margin-bottom: 1.8rem;
+    padding-left: 1.5rem;
+}
+
+main article li {
+    margin-bottom: 0.8rem;
+    font-size: 1.05rem;
+}
+
+main article ul li {
+    list-style-type: disc;
+}
+
+main article section {
+    margin-bottom: 3rem;
 }
