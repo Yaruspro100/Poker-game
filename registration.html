@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Регистрация - Техасский Холдем</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <h1>
+            <a href="menu.html">Техасский Холдем</a>
+        </h1>
+    </header>
+
+    <main>
+        <div class="auth-container">
+            <h2>Регистрация</h2>
+            <form id="registration-form" action="/api/register" method="POST">
+                <div class="form-group">
+                    <label for="username">Логин</label>
+                    <input type="text" id="username" name="username" placeholder="Придумайте логин" required autocomplete="username">
+                </div>
+                <div class="form-group">
+                    <label for="password">Пароль</label>
+                    <input type="password" id="password" name="password" placeholder="Не менее 6 символов" required minlength="6" autocomplete="new-password">
+                </div>
+                <div class="form-group">
+                    <label for="password-confirm">Подтверждение пароля</label>
+                    <input type="password" id="password-confirm" name="password_confirm" placeholder="Повторите пароль" required minlength="6" autocomplete="new-password">
+                </div>
+                <div id="reg-error" class="error-message" style="display: none;"></div>
+                <button type="submit" class="btn-auth">Зарегистрироваться</button>
+            </form>
+            <div class="auth-links">
+                <a href="login.html">Уже есть аккаунт? Войти</a>
+            </div>
+        </div>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>

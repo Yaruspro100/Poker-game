@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Создать комнату - Техасский Холдем</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <h1>
+            <a href="menu.html">Техасский Холдем</a>
+        </h1>
+        <nav class="menu-nav">
+            <ul>
+                <li><a href="#">Быстрая игра</a></li>
+                <li><a href="create-room.html">Создать комнату</a></li>
+                <li><a href="connect-to-room.html">Подключиться к комнате</a></li>
+                <li><a href="how-to-play.html">Как играть</a></li>
+            </ul>
+        </nav>
+        <nav class="profile-nav">
+            <ul>
+                <li><a href="profile.html">Профиль</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <div class="auth-container">
+            <h2>Создание комнаты</h2>
+            <form id="create-room-form" action="/api/create-room" method="POST">
+                <div class="form-group">
+                    <label for="room-name">Название комнаты</label>
+                    <input type="text" id="room-name" name="room_name" placeholder="Например, 'Вечерний покер'" required>
+                </div>
+                <div class="form-group">
+                    <label for="max-players">Максимум игроков</label>
+                    <input type="number" id="max-players" name="max_players" min="2" max="9" value="9" required>
+                </div>
+                <div class="form-group">
+                    <label for="small-blind">Малый блайнд</label>
+                    <input type="number" id="small-blind" name="small_blind" min="1" value="5" required>
+                </div>
+                <div class="form-group">
+                    <label for="big-blind">Большой блайнд</label>
+                    <input type="number" id="big-blind" name="big_blind" min="2" value="10" required>
+                </div>
+                <div class="form-group">
+                    <label for="min-buyin">Мин. бай-ин</label>
+                    <input type="number" id="min-buyin" name="min_buyin" min="1" value="1000" required>
+                </div>
+                <div class="form-group">
+                    <label for="max-buyin">Макс. бай-ин</label>
+                    <input type="number" id="max-buyin" name="max_buyin" min="1" value="3000" required>
+                </div>
+                <div class="form-group">
+                    <label for="room-password">Пароль комнаты</label>
+                    <input type="password" id="room-password" name="room_password" placeholder="Не менее 4 символов" minlength="4" required autocomplete="off">
+                </div>
+                <div id="create-room-error" class="error-message" style="display: none;"></div>
+                <button type="submit" class="btn-auth">Создать комнату</button>
+            </form>
+            <div class="auth-links">
+                <a href="connect-to-room.html">Подключиться к существующей комнате</a>
+            </div>
+        </div>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>
