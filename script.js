@@ -1,68 +1,142 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // Обновление навигации
+
+    //  Утилиты: работа с сессией
+    //  Токен хранится в httpOnly куке (сервер) — JS его не видит и не трогает.
+    //  В localStorage храним только данные пользователя
+    //  для отображения в UI и передачи в Socket.io.
+
+    function saveSession(token, user) {
+        // Токен нужен только для Socket.io — httpOnly куку JS читать не может
+        localStorage.setItem('token', token);
+        localStorage.setItem('currentUser', JSON.stringify(user));
+    }
+
+    function clearSession() {
+        localStorage.removeItem('token');
+        localStorage.removeItem('currentUser');
+    }
+
+    function getCurrentUser() {
+        try {
+            return JSON.parse(localStorage.getItem('currentUser'));
+        } catch {
+            return null;
+        }
+    }
+
+    function getToken() {
+        return localStorage.getItem('token');
+    }
+
+    //  Обновление UI навигации
+
     function updateAuthUI() {
         const profileNav = document.querySelector('.profile-nav ul');
         if (!profileNav) return;
 
-        const loggedIn = localStorage.getItem('loggedIn') === 'true';
+        const user = getCurrentUser();
 
-        if (loggedIn) {
-            profileNav.innerHTML = '<li><a href="profile.html">Профиль</a></li>';
+        if (user && getToken()) {
+            profileNav.innerHTML = `
+                <li><a href="/profile.html">${user.username} (${user.chips} 🪙)</a></li>
+                <li><a href="#" id="logout-btn">Выйти</a></li>
+            `;
+            const logoutBtn = document.getElementById('logout-btn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    // Говорим серверу очистить httpOnly куку
+                    await fetch('/api/auth/logout', { method: 'POST' });
+                    clearSession();
+                    window.location.href = '/menu.html';
+                });
+            }
         } else {
             profileNav.innerHTML = `
-                <li><a href="registration.html">Зарегистрироваться</a></li>
-                <li><a href="login.html">Войти</a></li>
+            <ul>
+                <li><a href="/registration.html">Зарегистрироваться</a></li>
+                <li><a href="/login.html">Войти</a></li>
+            </ul>
             `;
         }
     }
-
-    // Применяем навигацию сразу при загрузке любой страницы
     updateAuthUI();
 
-    // Защита страницы профиля от гостей
-    if (window.location.pathname.includes('profile.html')) {
-        if (localStorage.getItem('loggedIn') !== 'true') {
-            window.location.href = 'login.html';
-        }
-    }
+    //  Форма входа
 
-    // Форма входа
     const loginForm = document.getElementById('login-form');
     if (loginForm) {
         const loginError = document.getElementById('login-error');
+
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
+            loginError.style.display = 'none';
+
             const formData = new FormData(loginForm);
             const data = Object.fromEntries(formData.entries());
 
             if (!data.username || !data.password) {
-                if (loginError) {
-                    loginError.style.display = 'block';
-                    loginError.textContent = 'Заполните все поля';
-                }
+                loginError.style.display = 'block';
+                loginError.textContent = 'Заполните все поля';
                 return;
             }
 
-            // Здесь должен быть реальный fetch-запрос к серверу
-            // fetch('/api/login', { method: 'POST', ... })
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    // credentials: 'same-origin' — браузер сохранит куку из ответа
+                    credentials: 'same-origin',
+                    body: JSON.stringify({
+                        username: data.username,
+                        password: data.password,
+                    }),
+                });
 
-            // Имитация успешного входа
-            localStorage.setItem('loggedIn', 'true');
-            window.location.href = 'menu.html';
+                const result = await response.json();
+
+                if (!response.ok) {
+                    loginError.style.display = 'block';
+                    loginError.textContent = result.error || 'Ошибка входа';
+                    return;
+                }
+
+                // Сохраняем данные для UI и Socket.io
+                saveSession(result.token, result.user);
+                window.location.href = '/menu.html';
+
+            } catch (err) {
+                loginError.style.display = 'block';
+                loginError.textContent = 'Ошибка соединения с сервером';
+                console.error('Ошибка входа:', err);
+            }
         });
     }
 
-    // Форма регистрации
+    //  Форма регистрации
+
     const regForm = document.getElementById('registration-form');
     if (regForm) {
         const regError = document.getElementById('reg-error');
-        regForm.addEventListener('submit', (e) => {
+
+        function showRegError(msg) {
+            regError.style.display = 'block';
+            regError.textContent = msg;
+        }
+
+        regForm.addEventListener('submit', async (e) => {
             e.preventDefault();
+            regError.style.display = 'none';
+
             const formData = new FormData(regForm);
             const data = Object.fromEntries(formData.entries());
 
             if (!data.username || !data.password || !data.password_confirm) {
                 showRegError('Заполните все поля');
+                return;
+            }
+            if (data.username.length < 3 || data.username.length > 20) {
+                showRegError('Логин должен быть от 3 до 20 символов');
                 return;
             }
             if (data.password !== data.password_confirm) {
@@ -74,30 +148,61 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            // Заглушка успешной регистрации
-            localStorage.setItem('loggedIn', 'true');
-            localStorage.setItem('registeredUser', data.username);
-            window.location.href = 'menu.html';
-        });
+            try {
+                // Шаг 1: Регистрация
+                const regResponse = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        username: data.username,
+                        password: data.password,
+                    }),
+                });
 
-        function showRegError(msg) {
-            if (regError) {
-                regError.style.display = 'block';
-                regError.textContent = msg;
+                const regResult = await regResponse.json();
+
+                if (!regResponse.ok) {
+                    showRegError(regResult.error || 'Ошибка регистрации');
+                    return;
+                }
+
+                // Шаг 2: Автоматический вход после регистрации
+                const loginResponse = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'same-origin',
+                    body: JSON.stringify({
+                        username: data.username,
+                        password: data.password,
+                    }),
+                });
+
+                const loginResult = await loginResponse.json();
+
+                if (!loginResponse.ok) {
+                    window.location.href = '/login.html';
+                    return;
+                }
+
+                saveSession(loginResult.token, loginResult.user);
+                window.location.href = '/menu.html';
+
+            } catch (err) {
+                showRegError('Ошибка соединения с сервером');
+                console.error('Ошибка регистрации:', err);
             }
-        }
+        });
     }
 
-    // Форма создания комнаты
+    //  Форма создания комнаты
+
     const createRoomForm = document.getElementById('create-room-form');
     if (createRoomForm) {
         const createRoomError = document.getElementById('create-room-error');
 
         function showCreateRoomError(msg) {
-            if (createRoomError) {
-                createRoomError.style.display = 'block';
-                createRoomError.textContent = msg;
-            }
+            createRoomError.style.display = 'block';
+            createRoomError.textContent = msg;
         }
 
         createRoomForm.addEventListener('submit', (e) => {
@@ -142,9 +247,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 bigBlind,
                 minBuyin,
                 maxBuyin,
-                hasPassword: true
+                hasPassword: true,
             }));
-            window.location.href = 'connect-to-room.html';
+            window.location.href = '/connect-to-room.html';
         });
     }
 });

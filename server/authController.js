@@ -18,7 +18,7 @@ async function register(req, res, next) {
     try {
         const { username, password } = req.body;
 
-        // --- Валидация входных данных ---
+        // Валидация входных данных
         if (!username || !password) {
             return res.status(400).json({ error: 'Логин и пароль обязательны' });
         }
