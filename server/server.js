@@ -1,7 +1,5 @@
 /**
  * server.js — точка входа в приложение.
- * Защита страниц происходит на сервере через httpOnly куки —
- * браузер никогда не получает HTML защищённой страницы без валидного токена.
  */
 
 require('dotenv').config({ path: require('path').join(__dirname, '.env') });
@@ -15,6 +13,7 @@ const jwt = require('jsonwebtoken');
 const path = require('path');
 
 const authRoutes = require('./authRoutes');
+const profileRoutes = require('./profileRoutes');
 const { socketAuth } = require('./jwtMiddleware');
 
 const app = express();
@@ -29,31 +28,22 @@ io.use(socketAuth);
 // Express middleware
 app.use(cors());
 app.use(express.json());
-app.use(cookieParser()); // Читает куки из запроса и кладёт в req.cookies
+app.use(cookieParser());
 
-//  Middleware проверки авторизации по кукам
-//  Проверяет httpOnly куку 'token' ДО отдачи HTML.
-//  Если токен невалиден — редирект на /login.html.
+// Middleware проверки авторизации по кукам (для HTML-страниц)
 function requireAuth(req, res, next) {
     const token = req.cookies.token;
-
-    if (!token) {
-        return res.redirect('/login.html');
-    }
-
+    if (!token) return res.redirect('/login.html');
     try {
         req.user = jwt.verify(token, process.env.JWT_SECRET);
-        next(); // Токен валиден — отдаём страницу
+        next();
     } catch {
-        // Токен просрочен или подделан — чистим куку и редиректим
         res.clearCookie('token');
         return res.redirect('/login.html');
     }
 }
 
-//  Защищённые HTML-маршруты
-//  ВАЖНО: должны стоять ДО express.static,
-//  иначе статика отдаст файл раньше проверки!
+// Защищённые HTML-маршруты — стоят ДО express.static
 app.get('/create-room.html', requireAuth, (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'create-room.html'));
 });
@@ -64,14 +54,13 @@ app.get('/profile.html', requireAuth, (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'profile.html'));
 });
 
-// Маршруты API
+// API маршруты
 app.use('/api/auth', authRoutes);
+app.use('/api/profile', profileRoutes);
 
-// Статические файлы (публичные страницы)
-// Стоит ПОСЛЕ защищённых маршрутов
+// Статические файлы — стоят ПОСЛЕ защищённых маршрутов
 app.use(express.static(path.join(__dirname, '..')));
 
-// Главная страница
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'menu.html'));
 });
@@ -79,11 +68,7 @@ app.get('/', (req, res) => {
 // Socket.io
 io.on('connection', (socket) => {
     console.log(`Игрок подключился: ${socket.user.username} (${socket.id})`);
-
-    socket.emit('welcome', {
-        message: `Добро пожаловать, ${socket.user.username}!`,
-    });
-
+    socket.emit('welcome', { message: `Добро пожаловать, ${socket.user.username}!` });
     socket.on('disconnect', () => {
         console.log(`Игрок отключился: ${socket.user.username} (${socket.id})`);
     });
@@ -97,7 +82,6 @@ app.use((err, req, res, next) => {
     res.status(statusCode).json({ error: err.message || 'Внутренняя ошибка сервера' });
 });
 
-// Запуск
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
     console.log(`Сервер запущен на http://localhost:${PORT}`);

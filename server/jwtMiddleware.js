@@ -21,31 +21,29 @@ const jwt = require('jsonwebtoken');
  *   });
  */
 function expressAuth(req, res, next) {
-    // Извлекаем заголовок авторизации
+    // Сначала проверяем заголовок (для Socket.io и внешних клиентов)
+    let token;
     const authHeader = req.headers['authorization'];
 
-    // Проверяем наличие и формат: "Bearer <token>"
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+        token = authHeader.slice(7);
+    } else if (req.cookies?.token) {
+        // Запасной вариант — читаем из httpOnly куки (для браузерных запросов)
+        token = req.cookies.token;
+    }
+
+    if (!token) {
         return res.status(401).json({ error: 'Токен отсутствует или имеет неверный формат' });
     }
 
-    // Вырезаем сам токен (всё после "Bearer ")
-    const token = authHeader.slice(7);
-
     try {
-        // jwt.verify выбрасывает исключение, если токен просрочен или подпись неверна
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-        // Записываем данные пользователя в объект запроса —
-        // они будут доступны во всех следующих middleware и обработчиках
         req.user = {
             userId: decoded.userId,
             username: decoded.username,
         };
-
-        next(); // Передаём управление следующему middleware
+        next();
     } catch (err) {
-        // TokenExpiredError, JsonWebTokenError, NotBeforeError
         return res.status(401).json({ error: 'Токен недействителен или истёк' });
     }
 }

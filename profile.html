@@ -1,28 +1,95 @@
 <!DOCTYPE html>
 <html lang="ru">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Как играть — Техасский Холдем</title>
-        <link rel="stylesheet" href="styles.css">
-    </head>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Профиль - Техасский Холдем</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <h1><a href="menu.html">Техасский Холдем</a></h1>
+        <nav class="menu-nav">
+            <ul>
+                <li><a href="#">Быстрая игра</a></li>
+                <li><a href="create-room.html">Создать комнату</a></li>
+                <li><a href="connect-to-room.html">Подключиться к комнате</a></li>
+                <li><a href="how-to-play.html">Как играть</a></li>
+            </ul>
+        </nav>
+        <nav class="profile-nav">
+            <ul></ul>
+        </nav>
+    </header>
 
-    <body>
-        <header>
-            <h1><a href="menu.html">Техасский Холдем</a></h1>
-            <nav class="menu-nav">
-                <ul>
-                    <li><a href="#">Быстрая игра</a></li>
-                    <li><a href="create-room.html">Создать комнату</a></li>
-                    <li><a href="connect-to-room.html">Подключиться к комнате</a></li>
-                    <li><a href="how-to-play.html">Как играть</a></li>
-                </ul>
-            </nav>
-            <nav class="profile-nav"></nav>
-        </header>
+    <main>
+        <div class="profile-container">
 
-        <main>
-        </main>
-        <script src="script.js"></script>
-    </body>
+            <div class="profile-card">
+                <h2>Мой профиль</h2>
+                <div class="profile-info">
+                    <div class="profile-info-row">
+                        <span class="profile-label">Логин</span>
+                        <span class="profile-value" id="profile-username">—</span>
+                    </div>
+                    <div class="profile-info-row">
+                        <span class="profile-label">Фишки</span>
+                        <span class="profile-value" id="profile-chips">—</span>
+                    </div>
+                </div>
+
+                <div class="claim-section">
+                    <button class="btn-claim" id="btn-claim" disabled>Загрузка...</button>
+                    <div class="claim-timer" id="claim-timer"></div>
+                </div>
+            </div>
+
+            <div class="profile-card">
+                <h3>Сменить логин</h3>
+                <div class="form-group">
+                    <label for="new-username">Новый логин</label>
+                    <input type="text" id="new-username" placeholder="От 3 до 20 символов">
+                </div>
+                <div class="form-group">
+                    <label for="confirm-password-username">Текущий пароль</label>
+                    <input type="password" id="confirm-password-username" placeholder="Подтвердите действие">
+                </div>
+                <div id="username-message" class="profile-message"></div>
+                <button class="btn-auth" id="btn-change-username">Сменить логин</button>
+            </div>
+
+            <div class="profile-card">
+                <h3>Сменить пароль</h3>
+                <div class="form-group">
+                    <label for="current-password">Текущий пароль</label>
+                    <input type="password" id="current-password" placeholder="Введите текущий пароль">
+                </div>
+                <div class="form-group">
+                    <label for="new-password">Новый пароль</label>
+                    <input type="password" id="new-password" placeholder="Минимум 6 символов">
+                </div>
+                <div class="form-group">
+                    <label for="new-password-confirm">Повторите новый пароль</label>
+                    <input type="password" id="new-password-confirm" placeholder="Повторите новый пароль">
+                </div>
+                <div id="password-message" class="profile-message"></div>
+                <button class="btn-auth" id="btn-change-password">Сменить пароль</button>
+            </div>
+
+            <div class="profile-card profile-card-danger">
+                <h3>Удалить аккаунт</h3>
+                <p class="danger-text">Это действие необратимо. Все ваши данные и фишки будут удалены.</p>
+                <div class="form-group">
+                    <label for="delete-password">Введите пароль для подтверждения</label>
+                    <input type="password" id="delete-password" placeholder="Ваш текущий пароль">
+                </div>
+                <div id="delete-message" class="profile-message"></div>
+                <button class="btn-danger" id="btn-delete-account">Удалить аккаунт</button>
+            </div>
+
+        </div>
+    </main>
+
+    <script src="script.js"></script>
+</body>
 </html>
