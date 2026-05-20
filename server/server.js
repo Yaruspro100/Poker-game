@@ -15,6 +15,7 @@ const path = require('path');
 const authRoutes = require('./authRoutes');
 const profileRoutes = require('./profileRoutes');
 const { socketAuth } = require('./jwtMiddleware');
+const RoomManager = require('./game/RoomManager');
 
 const app = express();
 const server = http.createServer(app);
@@ -23,7 +24,12 @@ const server = http.createServer(app);
 const io = new Server(server, {
     cors: { origin: '*', methods: ['GET', 'POST'] },
 });
+
+// JWT-проверка для всех Socket.io соединений
 io.use(socketAuth);
+
+// Менеджер комнат — управляет игровой логикой и Socket.io событиями
+const roomManager = new RoomManager(io);
 
 // Express middleware
 app.use(cors());
@@ -58,20 +64,26 @@ app.get('/profile.html', requireAuth, (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/profile', profileRoutes);
 
+// Список комнат для лобби (connect-to-room.html)
+app.get('/api/rooms', requireAuth, (req, res) => {
+    res.json(roomManager.getRoomList());
+});
+
+app.post('/api/rooms/create', requireAuth, (req, res) => {
+    const result = roomManager.createRoom(req.body, req.user.userId, req.user.username);
+    if (!result.ok) return res.status(400).json(result);
+    res.status(201).json(result);
+});
+
+app.get('/game.html', requireAuth, (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'game.html'));
+});
+
 // Статические файлы — стоят ПОСЛЕ защищённых маршрутов
 app.use(express.static(path.join(__dirname, '..')));
 
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'menu.html'));
-});
-
-// Socket.io
-io.on('connection', (socket) => {
-    console.log(`Игрок подключился: ${socket.user.username} (${socket.id})`);
-    socket.emit('welcome', { message: `Добро пожаловать, ${socket.user.username}!` });
-    socket.on('disconnect', () => {
-        console.log(`Игрок отключился: ${socket.user.username} (${socket.id})`);
-    });
 });
 
 // Глобальный обработчик ошибок
@@ -82,6 +94,7 @@ app.use((err, req, res, next) => {
     res.status(statusCode).json({ error: err.message || 'Внутренняя ошибка сервера' });
 });
 
+// Запуск
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
     console.log(`Сервер запущен на http://localhost:${PORT}`);

@@ -14,7 +14,6 @@
         </h1>
         <nav class="menu-nav">
             <ul>
-                <li><a href="#">Быстрая игра</a></li>
                 <li><a href="create-room.html">Создать комнату</a></li>
                 <li><a href="connect-to-room.html">Подключиться к комнате</a></li>
                 <li><a href="how-to-play.html">Как играть</a></li>
@@ -25,29 +24,48 @@
         </nav>
     </header>
 
-    <div class="lobby-container">  
+    <div class="lobby-container">
         <div class="table-list-panel">
             <div class="table-list-header">
                 <div>Стол</div>
                 <div>Игроки</div>
-                <div class="hide-mobile">Ставки</div>
-                <div class="hide-mobile">Ср. банк</div>
-                <div class="hide-mobile">Ср. стек</div>
+                <div class="hide-mobile">Блайнды</div>
+                <div class="hide-mobile">Бай-ин</div>
+                <div class="hide-mobile">Статус</div>
                 <div></div>
             </div>
-            <div id="table-list-container"></div>
+            <div id="table-list-container">
+                <div class="lobby-empty">Загрузка комнат...</div>
+            </div>
         </div>
 
         <div class="table-detail-panel">
             <div class="detail-header">
-                <h3 id="detail-table-name"></h3>
-                <button class="btn-join-large" id="btn-join-table">Присоединиться к столу</button>
+                <h3 id="detail-table-name">Выберите стол</h3>
+                <button class="btn-join-large" id="btn-join-table" style="display:none">
+                    Присоединиться к столу
+                </button>
             </div>
-            
+
             <div class="buy-in-info" id="buyin-info"></div>
 
-            <div class="poker-table-visual" id="poker-table-visual">
+            <div id="password-section" style="display:none; margin-top:1rem;">
+                <div class="form-group">
+                    <label for="join-password">Пароль комнаты</label>
+                    <input type="password" id="join-password" placeholder="Введите пароль">
+                </div>
             </div>
+
+            <div id="buyin-section" style="display:none; margin-top:0.5rem;">
+                <div class="form-group">
+                    <label for="join-buyin">Бай-ин</label>
+                    <input type="number" id="join-buyin" placeholder="Сумма">
+                </div>
+            </div>
+
+            <div id="join-error" class="error-message" style="display:none; margin-top:0.5rem;"></div>
+
+            <div class="poker-table-visual" id="poker-table-visual"></div>
         </div>
     </div>
 
