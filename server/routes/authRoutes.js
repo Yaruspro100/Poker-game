@@ -4,7 +4,7 @@
 
 const express = require('express');
 const router = express.Router();
-const { register, login, logout } = require('./authController');
+const { register, login, logout } = require('../controllers/authController');
 
 // POST /api/auth/register — регистрация
 router.post('/register', register);

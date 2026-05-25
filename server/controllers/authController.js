@@ -7,7 +7,8 @@
 
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const pool = require('./db');
+const crypto = require('crypto');
+const pool = require('../config/db');
 
 /**
  * Регистрация нового пользователя.
@@ -88,9 +89,16 @@ async function login(req, res, next) {
             return res.status(401).json({ error: 'Неверный логин или пароль' });
         }
 
-        // Генерация JWT-токена
+        // Генерация уникального session_token для защиты от одновременных сессий
+        const sessionToken = crypto.randomBytes(32).toString('hex');
+        await pool.query(
+            'UPDATE users SET session_token = $1 WHERE id = $2',
+            [sessionToken, user.id]
+        );
+
+        // Генерация JWT-токена с session_token
         const token = jwt.sign(
-            { userId: user.id, username: user.username },
+            { userId: user.id, username: user.username, sessionToken },
             process.env.JWT_SECRET,
             { expiresIn: '24h', algorithm: 'HS256' }
         );

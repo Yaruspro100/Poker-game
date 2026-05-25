@@ -5,8 +5,8 @@
 
 const express = require('express');
 const router = express.Router();
-const { expressAuth } = require('./jwtMiddleware');
-const { getMe, claimChips, changeUsername, changePassword, deleteAccount } = require('./profileController');
+const { expressAuth } = require('../middleware/jwtMiddleware');
+const { getMe, claimChips, changeUsername, changePassword, deleteAccount } = require('../controllers/profileController');
 
 // Применяем expressAuth ко всем маршрутам профиля
 router.use(expressAuth);

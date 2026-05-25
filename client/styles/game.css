@@ -1,11 +1,3 @@
-/* 
-   Игровой экран — Техасский Холдем
-   Цветовая палитра совпадает с styles.css:
-   фон #1a6f40, акцент #268751 / #2fb35f / #4ade80
-    */
-
-/* --- Общий layout --- */
-
 .game-main {
     display: flex;
     flex-direction: column;
@@ -56,7 +48,6 @@ body.game-page .game-header-info {
     background: #4b5563;
 }
 
-/* Стол */
 
 .table-wrapper {
     width: 100%;
@@ -66,7 +57,6 @@ body.game-page .game-header-info {
 .poker-table {
     position: relative;
     width: 100%;
-    /* Сохраняем соотношение 16:9 через padding-top */
     padding-top: 50%;
     background: radial-gradient(ellipse at center, #1e7a42 60%, #155c30 100%);
     border-radius: 50%;
@@ -78,11 +68,6 @@ body.game-page .game-header-info {
         inset 0 0 60px rgba(0,0,0,0.3);
 }
 
-/*
-   Места игроков
-   Позиции рассчитаны для 9 мест по эллипсу.
-   Координаты: top/left в % от размера стола.
-*/
 
 .seat {
     position: absolute;
@@ -91,7 +76,6 @@ body.game-page .game-header-info {
     z-index: 10;
 }
 
-/* Позиции по часовой стрелке, начиная снизу по центру */
 .seat-pos-0 { top: 96%; left: 50%; }   /* низ центр (Hero) */
 .seat-pos-1 { top: 80%; left: 18%; }   /* низ лево */
 .seat-pos-2 { top: 50%; left: 3%;  }   /* лево */
@@ -102,7 +86,6 @@ body.game-page .game-header-info {
 .seat-pos-7 { top: 50%; left: 97%; }   /* право */
 .seat-pos-8 { top: 80%; left: 82%; }   /* низ право */
 
-/* Карточка места */
 
 .seat-inner {
     background: rgba(0, 0, 0, 0.55);
@@ -122,7 +105,17 @@ body.game-page .game-header-info {
     border-style: dashed;
 }
 
-/* Чья очередь — подсвечиваем */
+.seat-inner.waiting-next {
+    border-color: rgba(147, 197, 253, 0.5);
+    opacity: 0.85;
+}
+
+.seat-waiting-label {
+    font-size: 0.6rem;
+    color: #93c5fd;
+    margin-top: 2px;
+}
+
 .seat-inner.active-turn {
     border-color: #4ade80;
     box-shadow: 0 0 12px #4ade80;
@@ -134,19 +127,16 @@ body.game-page .game-header-info {
     50%       { box-shadow: 0 0 20px #4ade80; }
 }
 
-/* Сбросил карты */
 .seat-inner.folded {
     opacity: 0.35;
     filter: grayscale(1);
 }
 
-/* Олл-ин */
 .seat-inner.all-in {
     border-color: #f59e0b;
     box-shadow: 0 0 10px #f59e0b;
 }
 
-/* Дилер */
 .seat-inner.dealer::after {
     content: 'D';
     display: inline-block;
@@ -184,7 +174,6 @@ body.game-page .game-header-info {
     min-height: 0.9rem;
 }
 
-/* Мини-карты в месте (рубашки) */
 .seat-cards {
     display: flex;
     justify-content: center;
@@ -200,7 +189,6 @@ body.game-page .game-header-info {
     border: 1px solid rgba(255,255,255,0.4);
 }
 
-/* Открытые карты в шоудауне */
 .seat-card-face {
     width: 22px;
     height: 30px;
@@ -214,8 +202,23 @@ body.game-page .game-header-info {
     justify-content: center;
     line-height: 1;
 }
+.seat-card-face.red  { color: #dc2626; }
+.seat-card-face.black { color: #111; }
 
-/* Центр стола */
+.seat-cards-revealed .seat-card-face {
+    width: 24px;
+    height: 32px;
+    font-size: 0.6rem;
+}
+.seat-cards-revealed .seat-card-face.red  { color: #dc2626; }
+.seat-cards-revealed .seat-card-face.black { color: #111; }
+
+.seat-hand-name {
+    font-size: 0.58rem;
+    color: #fde68a;
+    margin-top: 3px;
+    line-height: 1.2;
+}
 
 .table-center {
     position: absolute;
@@ -240,7 +243,6 @@ body.game-page .game-header-info {
     text-transform: uppercase;
 }
 
-/* Общие карты */
 .community-cards {
     display: flex;
     justify-content: center;
@@ -262,7 +264,6 @@ body.game-page .game-header-info {
     transition: all 0.3s;
 }
 
-/* Заполненная карта */
 .card-slot.card {
     background: #fff;
     border: none;
@@ -287,7 +288,6 @@ body.game-page .game-header-info {
     font-size: 0.85rem;
 }
 
-/* Банк */
 .pot-display {
     display: flex;
     align-items: center;
@@ -311,7 +311,6 @@ body.game-page .game-header-info {
     color: #fde68a;
 }
 
-/* Сайд-поты */
 .side-pots {
     margin-top: 4px;
     font-size: 0.65rem;
@@ -326,8 +325,6 @@ body.game-page .game-header-info {
     margin: 2px;
 }
 
-/* Нижняя панель: карты + действия */
-
 .player-panel {
     width: 100%;
     max-width: 900px;
@@ -336,7 +333,6 @@ body.game-page .game-header-info {
     align-items: flex-start;
 }
 
-/* Карманные карты */
 .hole-cards-area {
     display: flex;
     flex-direction: column;
@@ -361,7 +357,6 @@ body.game-page .game-header-info {
     transition: transform 0.2s;
 }
 
-/* Обёртка двух карт */
 .hole-cards-area {
     display: flex;
     flex-direction: row;
@@ -395,8 +390,6 @@ body.game-page .game-header-info {
     text-align: center;
 }
 
-/* Панель действий */
-
 .action-panel {
     flex: 1;
     background: rgba(0,0,0,0.3);
@@ -424,7 +417,6 @@ body.game-page .game-header-info {
     font-weight: bold;
 }
 
-/* Рейз */
 .raise-section {
     display: flex;
     flex-direction: column;
@@ -479,7 +471,6 @@ body.game-page .game-header-info {
     border-color: #4ade80;
 }
 
-/* Кнопки действий */
 .action-buttons {
     display: flex;
     gap: 8px;
@@ -517,8 +508,6 @@ body.game-page .game-header-info {
 .btn-call  { background: #16a34a; color: #fff; }
 .btn-raise { background: #d97706; color: #fff; }
 .btn-allin { background: #dc2626; color: #fff; }
-
-/* Оверлеи */
 
 .overlay {
     position: fixed;
@@ -562,18 +551,48 @@ body.game-page .game-header-info {
     margin-bottom: 1rem;
 }
 
-/* Результат раздачи */
+.result-banner {
+    position: fixed;
+    top: 4.25rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 180;
+    max-width: min(520px, 94vw);
+    pointer-events: none;
+}
+
+.result-banner.hidden {
+    display: none;
+}
+
+.result-banner-inner {
+    background: linear-gradient(180deg, rgba(26, 64, 40, 0.97), rgba(18, 48, 30, 0.97));
+    border: 2px solid #4ade80;
+    border-radius: 12px;
+    padding: 0.6rem 1.2rem;
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45);
+    text-align: center;
+}
+
+.result-banner #result-title {
+    display: block;
+    font-size: 0.9rem;
+    color: #4ade80;
+    margin-bottom: 0.35rem;
+    font-weight: 700;
+}
+
 .result-winner {
-    font-size: 1.1rem;
+    font-size: 0.95rem;
     color: #fde68a;
     font-weight: bold;
-    margin: 0.8rem 0;
+    margin: 0.2rem 0;
 }
 
 .result-hand {
-    color: #4ade80;
-    font-size: 0.9rem;
-    margin-bottom: 0.4rem;
+    color: #86efac;
+    font-size: 0.8rem;
+    margin-bottom: 0.15rem;
 }
 
 .result-amount {
@@ -607,7 +626,6 @@ body.game-page .game-header-info {
     cursor: default;
 }
 
-/* Точки загрузки */
 .waiting-dots {
     display: flex;
     justify-content: center;
@@ -630,8 +648,6 @@ body.game-page .game-header-info {
     0%, 80%, 100% { transform: scale(0.6); opacity: 0.5; }
     40%            { transform: scale(1);   opacity: 1; }
 }
-
-   /* Адаптив */
 
 @media (max-width: 768px) {
     body.game-page .game-header-info {

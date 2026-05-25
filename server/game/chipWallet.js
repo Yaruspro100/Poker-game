@@ -2,7 +2,7 @@
  * chipWallet.js — операции с балансом фишек на счёте пользователя.
  */
 
-const pool = require('./db');
+const pool = require('../config/db');
 
 async function getBalance(userId) {
     const result = await pool.query('SELECT chips FROM users WHERE id = $1', [userId]);

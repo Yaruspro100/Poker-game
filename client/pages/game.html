@@ -4,13 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Покерный стол - Техасский Холдем</title>
-    <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="game.css">
+    <link rel="stylesheet" href="/styles/styles.css">
+    <link rel="stylesheet" href="/styles/game.css">
 </head>
 <body class="game-page">
 
     <header>
-        <h1><a href="/menu.html">Техасский Холдем</a></h1>
+        <h1><a href="#">Техасский Холдем</a></h1>
         <div class="game-header-info">
             <span id="room-name-display">—</span>
             <span id="blinds-display">—</span>
@@ -95,20 +95,12 @@
         </div>
     </main>
 
-    <div class="overlay" id="overlay-waiting">
-        <div class="overlay-box">
-            <h2>Ожидание игроков</h2>
-            <p>Нужно минимум 2 игрока для начала игры</p>
-            <div class="waiting-dots"><span></span><span></span><span></span></div>
-        </div>
-    </div>
-
-    <div class="overlay hidden" id="overlay-result">
-        <div class="overlay-box">
-            <h2 id="result-title">Результат раздачи</h2>
+    <aside class="result-banner hidden" id="overlay-result" aria-live="polite">
+        <div class="result-banner-inner">
+            <strong id="result-title">Результат раздачи</strong>
             <div id="result-body"></div>
         </div>
-    </div>
+    </aside>
 
     <div class="overlay overlay-ready-layer hidden" id="overlay-ready">
         <div class="overlay-box">
@@ -119,6 +111,6 @@
     </div>
 
     <script src="/socket.io/socket.io.js"></script>
-    <script src="game.js"></script>
+    <script type="module" src="/js/main-game.js"></script>
 </body>
 </html>

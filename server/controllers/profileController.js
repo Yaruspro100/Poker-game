@@ -4,7 +4,7 @@
  */
 
 const bcrypt = require('bcryptjs');
-const pool = require('./db');
+const pool = require('../config/db');
 
 /**
  * GET /api/profile/me

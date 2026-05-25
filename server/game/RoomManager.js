@@ -2,8 +2,9 @@
  * RoomManager.js — менеджер покерных комнат.
  */
 
-const GameLogic = require('./GameLogic');
-const chipWallet = require('../chipWallet');
+const GameLogic = require('./gameLogic');
+const chipWallet = require('./chipWallet');
+const { saveGameState, loadGameState, deleteGameState } = require('./gameState');
 
 const RESULT_BEFORE_READY_MS = 12000;
 
@@ -16,6 +17,20 @@ class RoomManager {
         this.io = io;
         this.rooms = new Map();
         this._registerSocketEvents();
+        this._restoreActiveRooms();
+    }
+
+    async _restoreActiveRooms() {
+        const pool = require('../config/db');
+        try {
+            const result = await pool.query('SELECT room_id FROM game_states WHERE phase != $1', ['ended']);
+            for (const row of result.rows) {
+                await this.restoreRoom(row.room_id);
+            }
+            console.log(`Восстановлено ${result.rows.length} активных комнат`);
+        } catch (err) {
+            console.error('Ошибка восстановления комнат:', err);
+        }
     }
 
     _registerSocketEvents() {
@@ -115,6 +130,12 @@ class RoomManager {
             this._emitGameState(socket, room, playerId);
             const accountChips = await chipWallet.getBalance(playerId);
 
+            if (room.game.toAct[0] 
+            && String(room.game.toAct[0]) === String(playerId)
+            && !['waiting', 'ended'].includes(room.game.phase)) {
+                room.game._emitTurn();
+            }
+
             // Сообщаем всем что игрок вернулся
             socket.to(roomId).emit('player-reconnected', { playerId, username });
 
@@ -148,19 +169,28 @@ class RoomManager {
         socket.join(roomId);
         room.players.set(socket.id, playerId);
 
-        this._emitGameState(socket, room, playerId);
+        const inHand = !['waiting', 'ended'].includes(room.game.phase);
+
+        this._broadcastGameState(roomId);
 
         socket.to(roomId).emit('player-joined-room', {
             playerId, username, seatIdx, chips: actualBuyIn,
         });
 
-        this._promptReady(roomId);
+        if (inHand) {
+            socket.emit('waiting-next-hand', {
+                message: 'Раздача уже идёт. Вы подключитесь к следующей после её окончания.',
+            });
+        } else {
+            this._promptReady(roomId);
+        }
 
         return {
             ok: true,
             seatIdx,
             accountChips: deduct.chips,
             roomInfo: this._roomInfo(room),
+            handInProgress: inHand,
         };
     }
 
@@ -209,6 +239,7 @@ class RoomManager {
         if (room.players.size === 0) {
             clearTimeout(room.autoStartTimer);
             this.rooms.delete(roomId);
+            await deleteGameState(roomId);
             console.log(`Комната удалена: ${roomId}`);
         }
 
@@ -266,6 +297,10 @@ class RoomManager {
 
         this.io.to(roomId).emit(eventName, eventData);
 
+        if (eventName === 'player-joined' || eventName === 'player-left') {
+            this._broadcastGameState(roomId);
+        }
+
         if (eventName === 'showdown' || eventName === 'hand-ended-no-showdown') {
             const room = this.rooms.get(roomId);
             if (!room) return;
@@ -274,6 +309,9 @@ class RoomManager {
                 this._promptReady(roomId);
             }, RESULT_BEFORE_READY_MS);
         }
+
+        // Автосохранение после каждого события
+        this._saveRoomState(roomId);
     }
 
     _promptReady(roomId) {
@@ -303,8 +341,9 @@ class RoomManager {
     _startHand(roomId) {
         const room = this.rooms.get(roomId);
         if (!room) return;
+        const readyIds = [...room.readyPlayers];
         room.readyPlayers.clear();
-        const started = room.game.startHand();
+        const started = room.game.startHand(readyIds);
         if (!started) {
             this.io.to(roomId).emit('waiting-for-players', {
                 message: 'Ждём минимум 2 игроков с фишками...',
@@ -364,6 +403,15 @@ class RoomManager {
         socket.emit('game-state', { ...state, roomInfo: this._roomInfo(room) });
     }
 
+    _broadcastGameState(roomId) {
+        const room = this.rooms.get(roomId);
+        if (!room) return;
+        for (const [socketId, pid] of room.players.entries()) {
+            const socket = this.io.sockets.sockets.get(socketId);
+            if (socket) this._emitGameState(socket, room, pid);
+        }
+    }
+
     _getSocketId(roomId, playerId) {
         const room = this.rooms.get(roomId);
         if (!room) return null;
@@ -381,6 +429,7 @@ class RoomManager {
                 roomId,
                 roomName: room.config.roomName,
                 playerCount: players.length,
+                seats: room.game.seats.map(s => (s ? { username: s.username } : null)),
                 maxPlayers: room.config.maxPlayers,
                 smallBlind: room.config.smallBlind,
                 bigBlind: room.config.bigBlind,
@@ -391,6 +440,70 @@ class RoomManager {
             });
         }
         return list;
+    }
+
+    async _saveRoomState(roomId) {
+        const room = this.rooms.get(roomId);
+        if (!room) return;
+        
+        try {
+            await saveGameState(roomId, {
+                config: room.config,
+                seats: room.game.seats,
+                phase: room.game.phase,
+                communityCards: room.game.communityCards,
+                dealerSeat: room.game.dealerSeat,
+                currentSeat: room.game.currentSeat,
+                currentBet: room.game.currentBet,
+                streetBets: room.game.streetBets,
+                totalContributed: room.game.totalContributed,
+                deck: room.game.deck,
+                toAct: room.game.toAct,
+                lastRaiseAmount: room.game.lastRaiseAmount,
+                actedThisStreet: [...room.game.actedThisStreet]
+            });
+        } catch (err) {
+            console.error(`Ошибка сохранения состояния комнаты ${roomId}:`, err);
+        }
+    }
+
+    async restoreRoom(roomId) {
+        const state = await loadGameState(roomId);
+        if (!state) return null;
+
+        const game = new GameLogic(state.config, (eventName, eventData) => {
+            this._handleGameEvent(roomId, eventName, eventData);
+        });
+
+        game.seats = state.seats;
+        game.phase = state.phase;
+        game.communityCards = state.communityCards;
+        game.dealerSeat = state.dealerSeat;
+        game.currentSeat = state.currentSeat;
+        game.currentBet = state.currentBet;
+        game.streetBets = state.streetBets;
+        game.totalContributed = state.totalContributed;
+        game.deck = state.deck;
+        game.toAct = state.toAct;
+        game.lastRaiseAmount = state.lastRaiseAmount || state.config.bigBlind;
+        game.actedThisStreet = new Set(state.actedThisStreet || []);
+
+        this.rooms.set(roomId, {
+            game,
+            config: state.config,
+            players: new Map(),
+            readyPlayers: new Set(),
+            autoStartTimer: null,
+            disconnectTimers: new Map(),
+        });
+
+        // Если игра в активной фазе и есть очередь ходов — отправляем событие о текущем ходе
+        if (game.toAct.length > 0 && !['waiting', 'ended'].includes(game.phase)) {
+            game._emitTurn();
+        }
+
+        console.log(`Комната восстановлена: ${roomId}`);
+        return { ok: true, roomId };
     }
 }
 
