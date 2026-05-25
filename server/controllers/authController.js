@@ -96,6 +96,18 @@ async function login(req, res, next) {
             [sessionToken, user.id]
         );
 
+        const io = req.app.get('io');
+            if (io) {
+                for (const [, socket] of io.sockets.sockets) {
+                    if (socket.user && String(socket.user.userId) === String(user.id)) {
+                        socket.emit('session-kicked', {
+                        reason: 'Выполнен вход с другого устройства',
+                        });
+                        socket.disconnect(true);
+                    }
+                }
+            }
+
         // Генерация JWT-токена с session_token
         const token = jwt.sign(
             { userId: user.id, username: user.username, sessionToken },

@@ -6,6 +6,7 @@ import { initLoginForm, initRegistrationForm, updateAuthUI } from './auth/forms.
 import { initCreateRoomForm } from './utils/create-room.js';
 import { initLobby } from './utils/lobby.js';
 import { initProfile } from './utils/profile.js';
+import { startSessionSocket } from './auth/sessionSocket.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     updateAuthUI();
@@ -14,4 +15,5 @@ document.addEventListener('DOMContentLoaded', () => {
     initCreateRoomForm();
     initLobby();
     initProfile();
+    startSessionSocket();
 });

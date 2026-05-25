@@ -67,7 +67,26 @@ socket.on('connect', () => {
 });
 
 socket.on('connect_error', (err) => {
-    addLog(`Ошибка подключения: ${err.message}`, 'system');
+  if (err.message && (
+    err.message.includes('Session expired') ||
+    err.message.includes('Authentication error')
+  )) {
+    localStorage.removeItem('token');
+    localStorage.removeItem('currentUser');
+    alert('Сессия завершена: выполнен вход с другого устройства.');
+    window.location.href = '/menu';
+    return;
+  }
+  addLog(`Ошибка подключения: ${err.message}`, 'system');
+});
+
+// Сервер шлёт это при логине со второго устройства
+socket.on('session-kicked', (data) => {
+  socket.disconnect();
+  localStorage.removeItem('token');
+  localStorage.removeItem('currentUser');
+  alert(data?.reason || 'Сессия завершена.');
+  window.location.href = '/menu';
 });
 
 socket.on('disconnect', () => {
