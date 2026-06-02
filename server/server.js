@@ -26,6 +26,8 @@ const io = new Server(server, {
     cors: { origin: '*', methods: ['GET', 'POST'] },
 });
 
+app.set('io', io);
+
 // JWT-проверка для всех Socket.io соединений
 io.use(socketAuth);
 
