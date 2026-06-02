@@ -3,7 +3,6 @@
  */
 
 import { state } from './state.js';
-import { addLog } from '../utils/logger.js';
 
 export function renderTurnUI(data) {
     const isMyTurn = Number(data.playerId) === Number(state.myPlayerId);
@@ -72,7 +71,7 @@ export function sendAction(socket, action, amount = 0) {
     if (!state.canAct) return;
     socket.emit('player-action', { roomId: state.roomId, action, amount }, (res) => {
         if (res && !res.ok) {
-            addLog(`Ошибка: ${res.error}`, 'system');
+            console.error(`Ошибка: ${res.error}`);
         }
     });
     disableAllActions();
@@ -87,7 +86,6 @@ export function setupActionButtons(socket) {
     document.getElementById('btn-raise')?.addEventListener('click', () => {
         const amount = parseInt(document.getElementById('raise-input').value);
         if (!amount || amount < state.raiseMin) {
-            addLog(`Минимальный рейз: ${state.raiseMin}`, 'system');
             return;
         }
         sendAction(socket, 'raise', amount);

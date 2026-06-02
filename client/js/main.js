@@ -3,9 +3,10 @@
  */
 
 import { initLoginForm, initRegistrationForm, updateAuthUI } from './auth/forms.js';
-import { initCreateRoomForm } from './utils/create-room.js';
+import { initCreateRoomForm } from './utils/createRoom.js';
 import { initLobby } from './utils/lobby.js';
 import { initProfile } from './utils/profile.js';
+import { startSessionMonitor } from './auth/sessionMonitor.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     updateAuthUI();
@@ -14,4 +15,5 @@ document.addEventListener('DOMContentLoaded', () => {
     initCreateRoomForm();
     initLobby();
     initProfile();
+    startSessionMonitor();
 });

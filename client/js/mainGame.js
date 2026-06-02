@@ -8,7 +8,6 @@ import { renderHoleCards, renderCommunityCards, clearHandCards, clearHoleCards }
 import { renderTurnUI, disableAllActions, setupActionButtons } from './game/actions.js';
 import { showResult, dismissResultOverlay, updateReadyUI, resetReadyButton, showOverlay, hideOverlay, setActionPrompt, setWaitingForPlayersStatus, updateIdlePrompt } from './game/ui.js';
 import { updatePot, updatePhase, clearSidePots, updateRoomHeader } from './game/pot.js';
-import { addLog } from './utils/logger.js';
 
 const urlParams = new URLSearchParams(window.location.search);
 state.roomId = urlParams.get('roomId');
@@ -30,8 +29,6 @@ if (!token) {
 const socket = io({ auth: { token } });
 
 socket.on('connect', () => {
-    addLog('Подключено к серверу', 'system');
-
     const joiningData = JSON.parse(localStorage.getItem('joiningRoom') || '{}');
 
     socket.emit('join-room', {
@@ -40,7 +37,6 @@ socket.on('connect', () => {
         password: joiningData.password || null,
     }, (res) => {
         if (!res?.ok) {
-            addLog(`Ошибка входа в комнату: ${res?.error || 'неизвестная ошибка'}`, 'system');
             if (res?.accountChips != null) syncAccountChips(res.accountChips);
             return;
         }
@@ -52,12 +48,7 @@ socket.on('connect', () => {
         }
 
         localStorage.removeItem('joiningRoom');
-        const joinMsg = res.reconnected
-            ? `Повторное подключение к столу (место ${res.seatIdx + 1})`
-            : `Вы за столом (место ${res.seatIdx + 1}), бай-ин списан со счёта`;
-        addLog(joinMsg, 'system');
         if (res.handInProgress) {
-            addLog('Текущая раздача уже идёт — вы подключитесь к следующей.', 'system');
         }
 
         socket.emit('get-game-state', { roomId: state.roomId }, (stateRes) => {
@@ -67,12 +58,18 @@ socket.on('connect', () => {
 });
 
 socket.on('connect_error', (err) => {
-    addLog(`Ошибка подключения: ${err.message}`, 'system');
 });
 
 socket.on('disconnect', () => {
-    addLog('Соединение разорвано', 'system');
     disableAllActions();
+});
+
+socket.on('session-kicked', (data) => {
+  socket.disconnect();
+  localStorage.removeItem('token');
+  localStorage.removeItem('currentUser');
+  // Для игры лучше сразу редиректить без alert, чтобы не ломать UI
+  window.location.href = '/login';
 });
 
 socket.on('account-chips', ({ chips }) => {
@@ -95,7 +92,6 @@ socket.on('hand-started', ({ dealerSeat, phase, players }) => {
     updatePhase(phase);
     renderPlayers(players, phase);
     setActionPrompt('Ожидайте своего хода...');
-    addLog('Новая раздача начата', 'system');
     dismissResultOverlay();
     hideOverlay('overlay-ready');
     resetReadyButton();
@@ -103,13 +99,11 @@ socket.on('hand-started', ({ dealerSeat, phase, players }) => {
 
 socket.on('blinds-posted', ({ sbPlayerId, bbPlayerId, smallBlind, bigBlind }) => {
     state.bigBlind = bigBlind;
-    addLog(`Блайнды: SB ${smallBlind} / BB ${bigBlind} 🪙`, 'system');
 });
 
 socket.on('street-changed', ({ phase, communityCards }) => {
     updatePhase(phase);
     renderCommunityCards(communityCards);
-    addLog(`Улица: ${PHASE_NAMES[phase] || phase}`, 'system');
     disableAllActions();
     document.getElementById('action-prompt').textContent = 'Ожидайте своего хода...';
     document.getElementById('to-call-display').textContent = '';
@@ -139,36 +133,29 @@ socket.on('player-action', ({ playerId, username, action, amount, chips, pot, pl
         raise: `рейзит до ${amount} 🪙`,
         allIn: `идёт ва-банк (${amount} 🪙)`,
     };
-    addLog(`${username} ${actionLabels[action] || action}`, 'action');
 });
 
 socket.on('player-joined', ({ seatIdx, username, chips }) => {
-    addLog(`${username} сел за стол (место ${seatIdx + 1})`, 'system');
 });
 
 socket.on('player-left', ({ seatIdx, playerId }) => {
     renderEmptySeat(seatIdx);
-    addLog(`Игрок покинул стол`, 'system');
     updateIdlePrompt();
 });
 
 socket.on('player-temporarily-disconnected', ({ username }) => {
-    addLog(`${username} отключился, ожидаем переподключения...`, 'system');
 });
 
 socket.on('player-reconnected', ({ username }) => {
-    addLog(`${username} переподключился`, 'system');
 });
 
 socket.on('waiting-for-players', ({ message }) => {
     dismissResultOverlay();
     hideOverlay('overlay-ready');
     setWaitingForPlayersStatus();
-    addLog(message, 'system');
 });
 
 socket.on('waiting-next-hand', ({ message }) => {
-    addLog(message, 'system');
     state.isSpectating = true;
     disableAllActions();
     hideOverlay('overlay-ready');
@@ -212,7 +199,6 @@ socket.on('hand-ended-no-showdown', ({ winnerId, winnerUsername, amount, players
         handName: null,
         isWinner: true,
     }], false);
-    addLog(`${winnerUsername} выигрывает ${amount} 🪙 (все сбросили)`, 'win');
     disableAllActions();
     updateIdlePrompt();
 });
@@ -237,12 +223,6 @@ socket.on('showdown', ({ evaluations, pots, results, communityCards, players }) 
         isWinner: r.amount > 0,
     }));
     showResult(resultItems, true);
-
-    for (const r of results) {
-        if (r.amount > 0) {
-            addLog(`${r.username} выигрывает ${r.amount} 🪙 (${r.hand?.name || '—'})`, 'win');
-        }
-    }
 
     disableAllActions();
     state.phase = 'ended';

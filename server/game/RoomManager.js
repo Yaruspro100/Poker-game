@@ -359,31 +359,31 @@ class RoomManager {
         for (const [roomId, room] of this.rooms.entries()) {
             if (!room.players.has(socket.id)) continue;
 
-            // Убираем сокет из маппинга, но игрока из игры НЕ трогаем
             room.players.delete(socket.id);
 
-            // Уведомляем остальных о временном дисконнекте
+            if (socket.sessionKicked) {
+                console.log(`[Session Kick] ${username} убирается из комнаты ${roomId} немедленно`);
+                await this.leaveRoom(socket, roomId, playerId, { force: true });
+                continue;
+            }
+
+            // Обычный дисконнект (обрыв связи) — даём 15 секунд на переподключение
             this.io.to(roomId).emit('player-temporarily-disconnected', {
                 playerId,
                 username,
                 reconnectMs: RECONNECT_GRACE_MS,
             });
-
             console.log(`${username} отключился, ждём ${RECONNECT_GRACE_MS / 1000}с...`);
 
-            // Запускаем таймер — если не вернётся, убираем со стола
             const timer = setTimeout(async () => {
-                room.disconnectTimers.delete(playerId);
-                console.log(`${username} не переподключился, убираем со стола`);
-
-                // Создаём фиктивный сокет для leaveRoom (игрок уже отключён)
-                const ghostSocket = {
-                    id: `ghost_${playerId}`,
-                    emit: () => {},
-                    leave: () => {},
-                };
-
-                await this.leaveRoom(ghostSocket, roomId, playerId, { force: true });
+            room.disconnectTimers.delete(playerId);
+            console.log(`${username} не переподключился, убираем со стола`);
+            const ghostSocket = {
+                id: `ghost_${playerId}`,
+                emit: () => {},
+                leave: () => {},
+            };
+            await this.leaveRoom(ghostSocket, roomId, playerId, { force: true });
             }, RECONNECT_GRACE_MS);
 
             room.disconnectTimers.set(playerId, timer);

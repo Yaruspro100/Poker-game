@@ -1,12 +1,6 @@
-﻿
-
-========================================
+﻿========================================
 ФАЙЛ: client\js\auth\forms.js
 ========================================
-
-/**
- * Р¤РѕСЂРјС‹ РІС…РѕРґР° Рё СЂРµРіРёСЃС‚СЂР°С†РёРё
- */
 
 import { saveSession, clearSession } from './session.js';
 
@@ -23,7 +17,7 @@ export function initLoginForm() {
 
         if (!data.username || !data.password) {
             loginError.style.display = 'block';
-            loginError.textContent = 'Р—Р°РїРѕР»РЅРёС‚Рµ РІСЃРµ РїРѕР»СЏ';
+            loginError.textContent = 'Заполните все поля';
             return;
         }
 
@@ -38,7 +32,7 @@ export function initLoginForm() {
 
             if (!res.ok) {
                 loginError.style.display = 'block';
-                loginError.textContent = result.error || 'РћС€РёР±РєР° РІС…РѕРґР°';
+                loginError.textContent = result.error || 'Ошибка входа';
                 return;
             }
 
@@ -46,7 +40,7 @@ export function initLoginForm() {
             window.location.href = '/menu';
         } catch {
             loginError.style.display = 'block';
-            loginError.textContent = 'РћС€РёР±РєР° СЃРѕРµРґРёРЅРµРЅРёСЏ СЃ СЃРµСЂРІРµСЂРѕРј';
+            loginError.textContent = 'Ошибка соединения с сервером';
         }
     });
 }
@@ -63,10 +57,10 @@ export function initRegistrationForm() {
         regError.style.display = 'none';
         const data = Object.fromEntries(new FormData(regForm).entries());
 
-        if (!data.username || !data.password || !data.password_confirm) return showRegError('Р—Р°РїРѕР»РЅРёС‚Рµ РІСЃРµ РїРѕР»СЏ');
-        if (data.username.length < 3 || data.username.length > 20) return showRegError('Р›РѕРіРёРЅ РґРѕР»Р¶РµРЅ Р±С‹С‚СЊ РѕС‚ 3 РґРѕ 20 СЃРёРјРІРѕР»РѕРІ');
-        if (data.password !== data.password_confirm) return showRegError('РџР°СЂРѕР»Рё РЅРµ СЃРѕРІРїР°РґР°СЋС‚');
-        if (data.password.length < 6) return showRegError('РџР°СЂРѕР»СЊ РґРѕР»Р¶РµРЅ СЃРѕРґРµСЂР¶Р°С‚СЊ РјРёРЅРёРјСѓРј 6 СЃРёРјРІРѕР»РѕРІ');
+        if (!data.username || !data.password || !data.password_confirm) return showRegError('Заполните все поля');
+        if (data.username.length < 3 || data.username.length > 20) return showRegError('Логин должен быть от 3 до 20 символов');
+        if (data.password !== data.password_confirm) return showRegError('Пароли не совпадают');
+        if (data.password.length < 6) return showRegError('Пароль должен содержать минимум 6 символов');
 
         try {
             const regRes = await fetch('/api/auth/register', {
@@ -75,7 +69,7 @@ export function initRegistrationForm() {
                 body: JSON.stringify({ username: data.username, password: data.password }),
             });
             const regResult = await regRes.json();
-            if (!regRes.ok) return showRegError(regResult.error || 'РћС€РёР±РєР° СЂРµРіРёСЃС‚СЂР°С†РёРё');
+            if (!regRes.ok) return showRegError(regResult.error || 'Ошибка регистрации');
 
             const loginRes = await fetch('/api/auth/login', {
                 method: 'POST',
@@ -89,7 +83,7 @@ export function initRegistrationForm() {
             saveSession(loginResult.token, loginResult.user);
             window.location.href = '/menu';
         } catch {
-            showRegError('РћС€РёР±РєР° СЃРѕРµРґРёРЅРµРЅРёСЏ СЃ СЃРµСЂРІРµСЂРѕРј');
+            showRegError('Ошибка соединения с сервером');
         }
     });
 }
@@ -104,8 +98,8 @@ export async function updateAuthUI() {
     if (user && getToken()) {
         profileNav.innerHTML = `
         <ul>
-            <li><a href="/profile">${user.username} - ${user.chips} рџЄ™</a></li>
-            <li><a href="#" id="logout-btn">Р’С‹Р№С‚Рё</a></li>
+            <li><a href="/profile">${user.username} - ${user.chips} 🪙</a></li>
+            <li><a href="#" id="logout-btn">Выйти</a></li>
         </ul>
         `;
         document.getElementById('logout-btn')?.addEventListener('click', async (e) => {
@@ -117,21 +111,16 @@ export async function updateAuthUI() {
     } else {
         profileNav.innerHTML = `
         <ul>
-            <li><a href="/registration">Р—Р°СЂРµРіРёСЃС‚СЂРёСЂРѕРІР°С‚СЊСЃСЏ</a></li>
-            <li><a href="/login">Р’РѕР№С‚Рё</a></li>
+            <li><a href="/registration">Зарегистрироваться</a></li>
+            <li><a href="/login">Войти</a></li>
         </ul>
         `;
     }
 }
 
-
 ========================================
 ФАЙЛ: client\js\auth\session.js
 ========================================
-
-/**
- * РЈРїСЂР°РІР»РµРЅРёРµ СЃРµСЃСЃРёРµР№ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ
- */
 
 export function saveSession(token, user) {
     localStorage.setItem('token', token);
@@ -177,17 +166,50 @@ export async function fetchCurrentUser() {
     }
 }
 
+========================================
+ФАЙЛ: client\js\auth\sessionMonitor.js
+========================================
+
+import { getToken, clearSession } from './session.js';
+
+let eventSource = null;
+
+export function startSessionMonitor() {
+    if (!getToken()) return;
+
+    if (eventSource) return;
+
+    eventSource = new EventSource('/api/session/stream');
+
+    eventSource.addEventListener('session-kicked', (event) => {
+        try {
+            const data = JSON.parse(event.data);
+            alert(data.reason || 'Вы вошли в аккаунт с другого устройства. Сессия завершена.');
+        } catch {
+            alert('Вы вошли в аккаунт с другого устройства. Сессия завершена.');
+        }
+
+        clearSession();
+        stopSessionMonitor();
+        window.location.href = '/login';
+    });
+
+    eventSource.onerror = () => {
+    };
+}
+
+export function stopSessionMonitor() {
+    if (eventSource) {
+        eventSource.close();
+        eventSource = null;
+    }
+}
 
 ========================================
 ФАЙЛ: client\js\game\actions.js
 ========================================
 
-/**
- * UI РґРµР№СЃС‚РІРёР№ РёРіСЂРѕРєР° (РєРЅРѕРїРєРё, СЃР»Р°Р№РґРµСЂС‹)
- */
-
 import { state } from './state.js';
-import { addLog } from '../utils/logger.js';
 
 export function renderTurnUI(data) {
     const isMyTurn = Number(data.playerId) === Number(state.myPlayerId);
@@ -205,7 +227,7 @@ export function renderTurnUI(data) {
     });
 
     if (!isMyTurn) {
-        document.getElementById('action-prompt').textContent = `РҐРѕРґ РёРіСЂРѕРєР°: ${data.username}`;
+        document.getElementById('action-prompt').textContent = `Ход игрока: ${data.username}`;
         document.getElementById('to-call-display').textContent = '';
         disableAllActions();
         return;
@@ -215,13 +237,13 @@ export function renderTurnUI(data) {
     state.raiseMin = data.minRaise;
     state.raiseMax = data.maxRaise;
 
-    document.getElementById('action-prompt').textContent = 'Р’Р°С€ С…РѕРґ!';
+    document.getElementById('action-prompt').textContent = 'Ваш ход!';
     document.getElementById('to-call-display').textContent =
-        data.toCall > 0 ? `Р”Р»СЏ РєРѕР»Р»Р°: ${data.toCall} рџЄ™` : '';
+        data.toCall > 0 ? `Для колла: ${data.toCall} 🪙` : '';
 
     setBtn('btn-fold',  true);
     setBtn('btn-check', data.canCheck);
-    setBtn('btn-call',  data.canCall, data.toCall > 0 ? `РљРѕР»Р» ${data.toCall}` : 'РљРѕР»Р»');
+    setBtn('btn-call',  data.canCall, data.toCall > 0 ? `Колл ${data.toCall}` : 'Колл');
     setBtn('btn-raise', data.canRaise);
     setBtn('btn-allin', true);
 
@@ -249,14 +271,14 @@ export function disableAllActions() {
         if (el) el.disabled = true;
     });
     const callBtn = document.getElementById('btn-call');
-    if (callBtn) callBtn.textContent = 'РљРѕР»Р»';
+    if (callBtn) callBtn.textContent = 'Колл';
 }
 
 export function sendAction(socket, action, amount = 0) {
     if (!state.canAct) return;
     socket.emit('player-action', { roomId: state.roomId, action, amount }, (res) => {
         if (res && !res.ok) {
-            addLog(`РћС€РёР±РєР°: ${res.error}`, 'system');
+            console.error(`Ошибка: ${res.error}`);
         }
     });
     disableAllActions();
@@ -271,7 +293,6 @@ export function setupActionButtons(socket) {
     document.getElementById('btn-raise')?.addEventListener('click', () => {
         const amount = parseInt(document.getElementById('raise-input').value);
         if (!amount || amount < state.raiseMin) {
-            addLog(`РњРёРЅРёРјР°Р»СЊРЅС‹Р№ СЂРµР№Р·: ${state.raiseMin}`, 'system');
             return;
         }
         sendAction(socket, 'raise', amount);
@@ -304,14 +325,9 @@ export function setupActionButtons(socket) {
     });
 }
 
-
 ========================================
 ФАЙЛ: client\js\game\cards.js
 ========================================
-
-/**
- * РћС‚СЂРёСЃРѕРІРєР° РєР°СЂС‚ (РєР°СЂРјР°РЅРЅС‹Рµ Рё РѕР±С‰РёРµ)
- */
 
 import { RED_SUITS } from './state.js';
 
@@ -379,14 +395,9 @@ export function clearHandCards() {
     clearCommunityCards();
 }
 
-
 ========================================
 ФАЙЛ: client\js\game\players.js
 ========================================
-
-/**
- * РћС‚СЂРёСЃРѕРІРєР° РёРіСЂРѕРєРѕРІ Р·Р° СЃС‚РѕР»РѕРј
- */
 
 import { state, RED_SUITS, HAND_PHASES } from './state.js';
 
@@ -547,10 +558,6 @@ export function countSeatedPlayers(players) {
 ФАЙЛ: client\js\game\pot.js
 ========================================
 
-/**
- * РЈРїСЂР°РІР»РµРЅРёРµ Р±Р°РЅРєРѕРј Рё С„Р°Р·Р°РјРё РёРіСЂС‹
- */
-
 import { state, PHASE_NAMES } from './state.js';
 
 export function updatePot(amount) {
@@ -588,10 +595,6 @@ export function updateRoomHeader({ roomName, smallBlind, bigBlind }) {
 ФАЙЛ: client\js\game\state.js
 ========================================
 
-/**
- * РЎРѕСЃС‚РѕСЏРЅРёРµ РёРіСЂС‹ Рё РєРѕРЅСЃС‚Р°РЅС‚С‹
- */
-
 export const PHASE_NAMES = {
     waiting:  'РћР¶РёРґР°РЅРёРµ',
     preflop:  'РџСЂРµС„Р»РѕРї',
@@ -628,14 +631,9 @@ export function setResultOverlayTimer(timer) {
     resultOverlayTimer = timer;
 }
 
-
 ========================================
 ФАЙЛ: client\js\game\ui.js
 ========================================
-
-/**
- * РЈРїСЂР°РІР»РµРЅРёРµ РѕРІРµСЂР»РµСЏРјРё (СЂРµР·СѓР»СЊС‚Р°С‚С‹, РіРѕС‚РѕРІРЅРѕСЃС‚СЊ)
- */
 
 import { state, RESULT_OVERLAY_MS, resultOverlayTimer, setResultOverlayTimer, HAND_PHASES } from './state.js';
 import { clearHandCards } from './cards.js';
@@ -725,12 +723,8 @@ export function updateIdlePrompt(players) {
 
 
 ========================================
-ФАЙЛ: client\js\utils\create-room.js
+ФАЙЛ: client\js\utils\createRoom.js
 ========================================
-
-/**
- * Р¤РѕСЂРјР° СЃРѕР·РґР°РЅРёСЏ РєРѕРјРЅР°С‚С‹
- */
 
 import { fetchCurrentUser, saveUserFromApi } from '../auth/session.js';
 
@@ -812,14 +806,9 @@ export function initCreateRoomForm() {
     });
 }
 
-
 ========================================
 ФАЙЛ: client\js\utils\lobby.js
 ========================================
-
-/**
- * Р›РѕР±Р±Рё - СЃРїРёСЃРѕРє РєРѕРјРЅР°С‚
- */
 
 import { fetchCurrentUser } from '../auth/session.js';
 
@@ -994,39 +983,9 @@ export function initLobby() {
     window.addEventListener('beforeunload', () => clearInterval(refreshInterval));
 }
 
-
-========================================
-ФАЙЛ: client\js\utils\logger.js
-========================================
-
-/**
- * Р›РѕРі СЃРѕР±С‹С‚РёР№ РёРіСЂС‹
- */
-
-export function addLog(text, type = 'action') {
-    const container = document.getElementById('game-log-entries');
-    if (!container) return;
-
-    const div = document.createElement('div');
-    div.className = `log-entry ${type === 'win' ? 'log-win' : type === 'system' ? 'log-system' : ''}`;
-    div.textContent = text;
-    container.appendChild(div);
-
-    container.scrollTop = container.scrollHeight;
-
-    while (container.children.length > 100) {
-        container.removeChild(container.firstChild);
-    }
-}
-
-
 ========================================
 ФАЙЛ: client\js\utils\profile.js
 ========================================
-
-/**
- * РЎС‚СЂР°РЅРёС†Р° РїСЂРѕС„РёР»СЏ
- */
 
 import { getCurrentUser, saveUserFromApi, clearSession } from '../auth/session.js';
 import { updateAuthUI } from '../auth/forms.js';
@@ -1144,14 +1103,9 @@ export function initProfile() {
     });
 }
 
-
 ========================================
-ФАЙЛ: client\js\main-game.js
+ФАЙЛ: client\js\mainGame.js
 ========================================
-
-/**
- * Р“Р»Р°РІРЅС‹Р№ С„Р°Р№Р» РёРіСЂС‹ вЂ” РїРѕРґРєР»СЋС‡РµРЅРёРµ Рє СЃРµСЂРІРµСЂСѓ Рё РѕР±СЂР°Р±РѕС‚РєР° СЃРѕР±С‹С‚РёР№
- */
 
 import { state, PHASE_NAMES, HAND_PHASES } from './game/state.js';
 import { renderPlayers, renderEmptySeat, findSeatByPlayerId, renderSeatAtShowdown, renderSeatShowdownCards, syncMyTableChipsFromPlayers } from './game/players.js';
@@ -1159,13 +1113,12 @@ import { renderHoleCards, renderCommunityCards, clearHandCards, clearHoleCards }
 import { renderTurnUI, disableAllActions, setupActionButtons } from './game/actions.js';
 import { showResult, dismissResultOverlay, updateReadyUI, resetReadyButton, showOverlay, hideOverlay, setActionPrompt, setWaitingForPlayersStatus, updateIdlePrompt } from './game/ui.js';
 import { updatePot, updatePhase, clearSidePots, updateRoomHeader } from './game/pot.js';
-import { addLog } from './utils/logger.js';
 
 const urlParams = new URLSearchParams(window.location.search);
 state.roomId = urlParams.get('roomId');
 
 if (!state.roomId) {
-    alert('РљРѕРјРЅР°С‚Р° РЅРµ СѓРєР°Р·Р°РЅР°');
+    alert('Комната не указана');
     window.location.href = '/connect-to-room';
 }
 
@@ -1181,8 +1134,6 @@ if (!token) {
 const socket = io({ auth: { token } });
 
 socket.on('connect', () => {
-    addLog('РџРѕРґРєР»СЋС‡РµРЅРѕ Рє СЃРµСЂРІРµСЂСѓ', 'system');
-
     const joiningData = JSON.parse(localStorage.getItem('joiningRoom') || '{}');
 
     socket.emit('join-room', {
@@ -1191,7 +1142,6 @@ socket.on('connect', () => {
         password: joiningData.password || null,
     }, (res) => {
         if (!res?.ok) {
-            addLog(`РћС€РёР±РєР° РІС…РѕРґР° РІ РєРѕРјРЅР°С‚Сѓ: ${res?.error || 'РЅРµРёР·РІРµСЃС‚РЅР°СЏ РѕС€РёР±РєР°'}`, 'system');
             if (res?.accountChips != null) syncAccountChips(res.accountChips);
             return;
         }
@@ -1203,12 +1153,7 @@ socket.on('connect', () => {
         }
 
         localStorage.removeItem('joiningRoom');
-        const joinMsg = res.reconnected
-            ? `РџРѕРІС‚РѕСЂРЅРѕРµ РїРѕРґРєР»СЋС‡РµРЅРёРµ Рє СЃС‚РѕР»Сѓ (РјРµСЃС‚Рѕ ${res.seatIdx + 1})`
-            : `Р’С‹ Р·Р° СЃС‚РѕР»РѕРј (РјРµСЃС‚Рѕ ${res.seatIdx + 1}), Р±Р°Р№-РёРЅ СЃРїРёСЃР°РЅ СЃРѕ СЃС‡С‘С‚Р°`;
-        addLog(joinMsg, 'system');
         if (res.handInProgress) {
-            addLog('РўРµРєСѓС‰Р°СЏ СЂР°Р·РґР°С‡Р° СѓР¶Рµ РёРґС‘С‚ вЂ” РІС‹ РїРѕРґРєР»СЋС‡РёС‚РµСЃСЊ Рє СЃР»РµРґСѓСЋС‰РµР№.', 'system');
         }
 
         socket.emit('get-game-state', { roomId: state.roomId }, (stateRes) => {
@@ -1218,12 +1163,18 @@ socket.on('connect', () => {
 });
 
 socket.on('connect_error', (err) => {
-    addLog(`РћС€РёР±РєР° РїРѕРґРєР»СЋС‡РµРЅРёСЏ: ${err.message}`, 'system');
 });
 
 socket.on('disconnect', () => {
-    addLog('РЎРѕРµРґРёРЅРµРЅРёРµ СЂР°Р·РѕСЂРІР°РЅРѕ', 'system');
     disableAllActions();
+});
+
+socket.on('session-kicked', (data) => {
+  socket.disconnect();
+  localStorage.removeItem('token');
+  localStorage.removeItem('currentUser');
+  // Для игры лучше сразу редиректить без alert, чтобы не ломать UI
+  window.location.href = '/login';
 });
 
 socket.on('account-chips', ({ chips }) => {
@@ -1245,8 +1196,7 @@ socket.on('hand-started', ({ dealerSeat, phase, players }) => {
     clearSidePots();
     updatePhase(phase);
     renderPlayers(players, phase);
-    setActionPrompt('РћР¶РёРґР°Р№С‚Рµ СЃРІРѕРµРіРѕ С…РѕРґР°...');
-    addLog('РќРѕРІР°СЏ СЂР°Р·РґР°С‡Р° РЅР°С‡Р°С‚Р°', 'system');
+    setActionPrompt('Ожидайте своего хода...');
     dismissResultOverlay();
     hideOverlay('overlay-ready');
     resetReadyButton();
@@ -1254,15 +1204,13 @@ socket.on('hand-started', ({ dealerSeat, phase, players }) => {
 
 socket.on('blinds-posted', ({ sbPlayerId, bbPlayerId, smallBlind, bigBlind }) => {
     state.bigBlind = bigBlind;
-    addLog(`Р‘Р»Р°Р№РЅРґС‹: SB ${smallBlind} / BB ${bigBlind} рџЄ™`, 'system');
 });
 
 socket.on('street-changed', ({ phase, communityCards }) => {
     updatePhase(phase);
     renderCommunityCards(communityCards);
-    addLog(`РЈР»РёС†Р°: ${PHASE_NAMES[phase] || phase}`, 'system');
     disableAllActions();
-    document.getElementById('action-prompt').textContent = 'РћР¶РёРґР°Р№С‚Рµ СЃРІРѕРµРіРѕ С…РѕРґР°...';
+    document.getElementById('action-prompt').textContent = 'Ожидайте своего хода...';
     document.getElementById('to-call-display').textContent = '';
 });
 
@@ -1284,54 +1232,47 @@ socket.on('player-action', ({ playerId, username, action, amount, chips, pot, pl
         state.myTableChips = chips;
     }
     const actionLabels = {
-        fold:  'СЃР±СЂР°СЃС‹РІР°РµС‚',
-        check: 'С‡РµРєР°РµС‚',
-        call:  `РєРѕР»Р»РёСЂСѓРµС‚ ${amount} рџЄ™`,
-        raise: `СЂРµР№Р·РёС‚ РґРѕ ${amount} рџЄ™`,
-        allIn: `РёРґС‘С‚ РІР°-Р±Р°РЅРє (${amount} рџЄ™)`,
+        fold:  'сбрасывает',
+        check: 'чекает',
+        call:  `коллирует ${amount} 🪙`,
+        raise: `рейзит до ${amount} 🪙`,
+        allIn: `идёт ва-банк (${amount} 🪙)`,
     };
-    addLog(`${username} ${actionLabels[action] || action}`, 'action');
 });
 
 socket.on('player-joined', ({ seatIdx, username, chips }) => {
-    addLog(`${username} СЃРµР» Р·Р° СЃС‚РѕР» (РјРµСЃС‚Рѕ ${seatIdx + 1})`, 'system');
 });
 
 socket.on('player-left', ({ seatIdx, playerId }) => {
     renderEmptySeat(seatIdx);
-    addLog(`РРіСЂРѕРє РїРѕРєРёРЅСѓР» СЃС‚РѕР»`, 'system');
     updateIdlePrompt();
 });
 
 socket.on('player-temporarily-disconnected', ({ username }) => {
-    addLog(`${username} РѕС‚РєР»СЋС‡РёР»СЃСЏ, РѕР¶РёРґР°РµРј РїРµСЂРµРїРѕРґРєР»СЋС‡РµРЅРёСЏ...`, 'system');
 });
 
 socket.on('player-reconnected', ({ username }) => {
-    addLog(`${username} РїРµСЂРµРїРѕРґРєР»СЋС‡РёР»СЃСЏ`, 'system');
 });
 
 socket.on('waiting-for-players', ({ message }) => {
     dismissResultOverlay();
     hideOverlay('overlay-ready');
     setWaitingForPlayersStatus();
-    addLog(message, 'system');
 });
 
 socket.on('waiting-next-hand', ({ message }) => {
-    addLog(message, 'system');
     state.isSpectating = true;
     disableAllActions();
     hideOverlay('overlay-ready');
     const prompt = document.getElementById('action-prompt');
-    if (prompt) prompt.textContent = 'РћР¶РёРґР°РµС‚Рµ СЃР»РµРґСѓСЋС‰СѓСЋ СЂР°Р·РґР°С‡Сѓ...';
+    if (prompt) prompt.textContent = 'Ожидаете следующую раздачу...';
 });
 
 socket.on('awaiting-ready', ({ readyCount, allCount }) => {
     dismissResultOverlay();
     resetReadyButton();
     updateReadyUI(readyCount, allCount);
-    setActionPrompt('РџРѕРґС‚РІРµСЂРґРёС‚Рµ РіРѕС‚РѕРІРЅРѕСЃС‚СЊ Рє СЂР°Р·РґР°С‡Рµ');
+    setActionPrompt('Подтвердите готовность к раздаче');
     showOverlay('overlay-ready');
 });
 
@@ -1342,7 +1283,7 @@ socket.on('player-ready', ({ playerId, readyCount, allCount }) => {
         const btn = document.getElementById('btn-ready');
         if (btn) {
             btn.disabled = true;
-            btn.textContent = 'Р’С‹ РіРѕС‚РѕРІС‹';
+            btn.textContent = 'Вы готовы';
         }
     }
     if (readyCount >= allCount && allCount >= 2) {
@@ -1363,7 +1304,6 @@ socket.on('hand-ended-no-showdown', ({ winnerId, winnerUsername, amount, players
         handName: null,
         isWinner: true,
     }], false);
-    addLog(`${winnerUsername} РІС‹РёРіСЂС‹РІР°РµС‚ ${amount} рџЄ™ (РІСЃРµ СЃР±СЂРѕСЃРёР»Рё)`, 'win');
     disableAllActions();
     updateIdlePrompt();
 });
@@ -1388,12 +1328,6 @@ socket.on('showdown', ({ evaluations, pots, results, communityCards, players }) 
         isWinner: r.amount > 0,
     }));
     showResult(resultItems, true);
-
-    for (const r of results) {
-        if (r.amount > 0) {
-            addLog(`${r.username} РІС‹РёРіСЂС‹РІР°РµС‚ ${r.amount} рџЄ™ (${r.hand?.name || 'вЂ”'})`, 'win');
-        }
-    }
 
     disableAllActions();
     state.phase = 'ended';
@@ -1447,7 +1381,7 @@ function applySpectatorMode(gs) {
         disableAllActions();
         hideOverlay('overlay-ready');
         const prompt = document.getElementById('action-prompt');
-        if (prompt) prompt.textContent = 'РћР¶РёРґР°РµС‚Рµ СЃР»РµРґСѓСЋС‰СѓСЋ СЂР°Р·РґР°С‡Сѓ...';
+        if (prompt) prompt.textContent = 'Ожидаете следующую раздачу...';
     } else if (HAND_PHASES.includes(gs.phase)) {
         state.isSpectating = false;
     }
@@ -1497,8 +1431,8 @@ function renderProfileNav() {
     const account = user.chips ?? 0;
 
     profileNav.innerHTML = `
-        <li><a href="/profile" id="profile-menu-link" title="Р‘Р°Р»Р°РЅСЃ РЅР° СЃС‡С‘С‚Рµ">${user.username} - ${account} рџЄ™</a></li>
-        <li><a href="#" id="logout-btn">Р’С‹Р№С‚Рё</a></li>
+        <li><a href="/profile" id="profile-menu-link" title="Баланс на счёте">${user.username} - ${account} 🪙</a></li>
+        <li><a href="#" id="logout-btn">Выйти</a></li>
     `;
 
     document.getElementById('profile-menu-link')?.addEventListener('click', (e) => {
@@ -1534,7 +1468,7 @@ async function refreshProfileNav() {
     }
 }
 
-const LEAVE_TABLE_CONFIRM = 'Р’С‹Р№С‚Рё РёР·-Р·Р° СЃС‚РѕР»Р°? Р’СЃРµ С„РёС€РєРё СЃРѕ СЃС‚РѕР»Р° РІРµСЂРЅСѓС‚СЃСЏ РЅР° РІР°С€ СЃС‡С‘С‚.';
+const LEAVE_TABLE_CONFIRM = 'Выйти из-за стола? Все фишки со стола вернутся на ваш счёт.';
 
 function confirmLeaveTable() {
     return confirm(LEAVE_TABLE_CONFIRM);
@@ -1543,7 +1477,7 @@ function confirmLeaveTable() {
 function leaveRoom(onSuccess) {
     socket.emit('leave-room', { roomId: state.roomId }, (res) => {
         if (res?.ok === false) {
-            alert(res.error || 'РќРµ СѓРґР°Р»РѕСЃСЊ РІС‹Р№С‚Рё РёР·-Р·Р° СЃС‚РѕР»Р°');
+            alert(res.error || 'Не удалось выйти из-за стола');
             return;
         }
         if (res?.accountChips != null) syncAccountChips(res.accountChips);
@@ -1569,7 +1503,7 @@ document.getElementById('btn-ready')?.addEventListener('click', () => {
     const btn = document.getElementById('btn-ready');
     if (btn) {
         btn.disabled = true;
-        btn.textContent = 'Р’С‹ РіРѕС‚РѕРІС‹';
+        btn.textContent = 'Вы готовы';
     }
 });
 
@@ -1585,19 +1519,15 @@ document.querySelector('header h1 a')?.addEventListener('click', (e) => {
 setupActionButtons(socket);
 refreshProfileNav();
 
-
 ========================================
 ФАЙЛ: client\js\main.js
 ========================================
-
-/**
- * Р“Р»Р°РІРЅС‹Р№ С„Р°Р№Р» РєР»РёРµРЅС‚Р° - РёРЅРёС†РёР°Р»РёР·Р°С†РёСЏ РІСЃРµС… РјРѕРґСѓР»РµР№
- */
 
 import { initLoginForm, initRegistrationForm, updateAuthUI } from './auth/forms.js';
 import { initCreateRoomForm } from './utils/create-room.js';
 import { initLobby } from './utils/lobby.js';
 import { initProfile } from './utils/profile.js';
+import { startSessionMonitor } from './auth/session-monitor.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     updateAuthUI();
@@ -1606,8 +1536,8 @@ document.addEventListener('DOMContentLoaded', () => {
     initCreateRoomForm();
     initLobby();
     initProfile();
+    startSessionMonitor();
 });
-
 
 ========================================
 ФАЙЛ: client\pages\connect-to-room.html
@@ -1688,7 +1618,6 @@ document.addEventListener('DOMContentLoaded', () => {
 </body>
 </html>
 
-
 ========================================
 ФАЙЛ: client\pages\create-room.html
 ========================================
@@ -1762,7 +1691,6 @@ document.addEventListener('DOMContentLoaded', () => {
     <script type="module" src="/js/main.js"></script>
 </body>
 </html>
-
 
 ========================================
 ФАЙЛ: client\pages\game.html
@@ -1884,7 +1812,6 @@ document.addEventListener('DOMContentLoaded', () => {
     <script type="module" src="/js/main-game.js"></script>
 </body>
 </html>
-
 
 ========================================
 ФАЙЛ: client\pages\how-to-play.html
@@ -2012,7 +1939,6 @@ document.addEventListener('DOMContentLoaded', () => {
     </body>
 </html>
 
-
 ========================================
 ФАЙЛ: client\pages\login.html
 ========================================
@@ -2057,7 +1983,6 @@ document.addEventListener('DOMContentLoaded', () => {
 </body>
 </html>
 
-
 ========================================
 ФАЙЛ: client\pages\menu.html
 ========================================
@@ -2089,7 +2014,6 @@ document.addEventListener('DOMContentLoaded', () => {
         <script type="module" src="/js/main.js"></script>
     </body>
 </html>
-
 
 ========================================
 ФАЙЛ: client\pages\profile.html
@@ -2190,7 +2114,6 @@ document.addEventListener('DOMContentLoaded', () => {
 </body>
 </html>
 
-
 ========================================
 ФАЙЛ: client\pages\registration.html
 ========================================
@@ -2238,7 +2161,6 @@ document.addEventListener('DOMContentLoaded', () => {
     <script type="module" src="/js/main.js"></script>
 </body>
 </html>
-
 
 ========================================
 ФАЙЛ: client\styles\game.css
@@ -3524,30 +3446,15 @@ main article section {
 ФАЙЛ: server\config\db.js
 ========================================
 
-/**
- * db.js вЂ” РјРѕРґСѓР»СЊ РїРѕРґРєР»СЋС‡РµРЅРёСЏ Рє PostgreSQL.
- * РСЃРїРѕР»СЊР·СѓРµС‚ РїСѓР» РєР»РёРµРЅС‚РѕРІ (pg.Pool) РґР»СЏ СЌС„С„РµРєС‚РёРІРЅРѕРіРѕ
- * РїРµСЂРµРёСЃРїРѕР»СЊР·РѕРІР°РЅРёСЏ СЃРѕРµРґРёРЅРµРЅРёР№ РІ РјРЅРѕРіРѕРїРѕР»СЊР·РѕРІР°С‚РµР»СЊСЃРєРѕР№ СЃСЂРµРґРµ.
- * РџР°СЂР°РјРµС‚СЂС‹ РїРѕРґРєР»СЋС‡РµРЅРёСЏ Р±РµСЂСѓС‚СЃСЏ РёР· РїРµСЂРµРјРµРЅРЅС‹С… РѕРєСЂСѓР¶РµРЅРёСЏ (.env).
- */
-
 const { Pool } = require('pg');
 
-// РЎРѕР·РґР°С‘Рј РїСѓР» СЃРѕРµРґРёРЅРµРЅРёР№. pg.Pool Р°РІС‚РѕРјР°С‚РёС‡РµСЃРєРё СѓРїСЂР°РІР»СЏРµС‚
-// Р¶РёР·РЅРµРЅРЅС‹Рј С†РёРєР»РѕРј СЃРѕРµРґРёРЅРµРЅРёР№: РѕС‚РєСЂС‹РІР°РµС‚ РЅРѕРІС‹Рµ РїСЂРё РЅР°РіСЂСѓР·РєРµ,
-// Р·Р°РєСЂС‹РІР°РµС‚ РїСЂРѕСЃС‚Р°РёРІР°СЋС‰РёРµ. Р”Р»СЏ СѓС‡РµР±РЅРѕРіРѕ РїСЂРѕРµРєС‚Р° С…РІР°С‚РёС‚ 10 СЃРѕРµРґРёРЅРµРЅРёР№.
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
-    // РћРїС†РёРѕРЅР°Р»СЊРЅРѕ: РјР°РєСЃРёРјР°Р»СЊРЅРѕРµ РєРѕР»РёС‡РµСЃС‚РІРѕ СЃРѕРµРґРёРЅРµРЅРёР№ РІ РїСѓР»Рµ
     max: 10,
-    // Р’СЂРµРјСЏ РѕР¶РёРґР°РЅРёСЏ СЃРѕРµРґРёРЅРµРЅРёСЏ РёР· РїСѓР»Р° (РјСЃ)
     idleTimeoutMillis: 30000,
-    // Р’СЂРµРјСЏ РѕР¶РёРґР°РЅРёСЏ СѓСЃС‚Р°РЅРѕРІРєРё РЅРѕРІРѕРіРѕ СЃРѕРµРґРёРЅРµРЅРёСЏ (РјСЃ)
     connectionTimeoutMillis: 2000,
 });
 
-// РџСЂРѕРІРµСЂСЏРµРј РїРѕРґРєР»СЋС‡РµРЅРёРµ РїСЂРё СЃС‚Р°СЂС‚Рµ вЂ” РµСЃР»Рё Р‘Р” РЅРµРґРѕСЃС‚СѓРїРЅР°,
-// СЃСЂР°Р·Сѓ РїРѕР»СѓС‡РёРј РѕС€РёР±РєСѓ РІРјРµСЃС‚Рѕ РїРµСЂРІРѕРіРѕ Р·Р°РїСЂРѕСЃР° РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ
 pool.connect((err, client, release) => {
     if (err) {
         console.error('РћС€РёР±РєР° РїРѕРґРєР»СЋС‡РµРЅРёСЏ Рє PostgreSQL:', err.message);
@@ -3563,28 +3470,16 @@ module.exports = pool;
 ФАЙЛ: server\controllers\authController.js
 ========================================
 
-/**
- * authController.js — контроллер аутентификации.
- * Содержит бизнес-логику регистрации и входа:
- * валидацию данных, хеширование пароля, работу с БД,
- * генерацию JWT-токена.
- */
-
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const pool = require('../config/db');
+const { notifyUser } = require('../routes/sessionStream');
 
-/**
- * Регистрация нового пользователя.
- * POST /api/auth/register
- * Body: { username, password }
- */
 async function register(req, res, next) {
     try {
         const { username, password } = req.body;
 
-        // Валидация входных данных
         if (!username || !password) {
             return res.status(400).json({ error: 'Логин и пароль обязательны' });
         }
@@ -3595,7 +3490,6 @@ async function register(req, res, next) {
             return res.status(400).json({ error: 'Пароль должен содержать минимум 6 символов' });
         }
 
-        // Проверка на уникальность имени пользователя
         const existing = await pool.query(
             'SELECT id FROM users WHERE username = $1',
             [username]
@@ -3604,11 +3498,8 @@ async function register(req, res, next) {
             return res.status(409).json({ error: 'Пользователь уже существует' });
         }
 
-        // Хеширование пароля
-        // 10 раундов соли — хороший баланс между безопасностью и скоростью.
         const passwordHash = await bcrypt.hash(password, 10);
 
-        // Запись нового пользователя в БД
         await pool.query(
             'INSERT INTO users (username, password_hash) VALUES ($1, $2)',
             [username, passwordHash]
@@ -3621,64 +3512,62 @@ async function register(req, res, next) {
     }
 }
 
-/**
- * Вход пользователя (получение JWT-токена).
- * POST /api/auth/login
- * Body: { username, password }
- */
 async function login(req, res, next) {
     try {
         const { username, password } = req.body;
 
-        // Базовая валидация
         if (!username || !password) {
             return res.status(400).json({ error: 'Логин и пароль обязательны' });
         }
 
-        // Поиск пользователя в БД
         const result = await pool.query(
             'SELECT id, username, password_hash, chips FROM users WHERE username = $1',
             [username]
         );
 
-        // Намеренно одинаковое сообщение — не раскрываем, существует ли логин
         if (result.rows.length === 0) {
             return res.status(401).json({ error: 'Неверный логин или пароль' });
         }
 
         const user = result.rows[0];
 
-        // Проверка пароля
         const isPasswordValid = await bcrypt.compare(password, user.password_hash);
         if (!isPasswordValid) {
             return res.status(401).json({ error: 'Неверный логин или пароль' });
         }
 
-        // Генерация уникального session_token для защиты от одновременных сессий
         const sessionToken = crypto.randomBytes(32).toString('hex');
         await pool.query(
             'UPDATE users SET session_token = $1 WHERE id = $2',
             [sessionToken, user.id]
         );
 
-        // Генерация JWT-токена с session_token
+        notifyUser(user.id, 'session-kicked', { reason: 'Выполнен вход с другого устройства' });
+
+        const io = req.app.get('io');
+        if (io) {
+            const userId = String(user.id);
+            for (const [, socket] of io.sockets.sockets) {
+                if (socket.user && String(socket.user.userId) === userId) {
+                    socket.emit('session-kicked', { reason: 'Выполнен вход с другого устройства' });
+                    socket.sessionKicked = true;
+                    socket.disconnect(true);
+                 }
+            }
+        }
+
         const token = jwt.sign(
             { userId: user.id, username: user.username, sessionToken },
             process.env.JWT_SECRET,
             { expiresIn: '24h', algorithm: 'HS256' }
         );
 
-        // Сохраняем токен в httpOnly куки
-        // httpOnly: true — JS на клиенте не может прочитать куку (защита от XSS).
-        // Браузер автоматически отправляет куку при каждом запросе к серверу —
-        // это позволяет серверу проверять авторизацию ДО отдачи HTML-страницы.
         res.cookie('token', token, {
             httpOnly: true,
-            maxAge: 24 * 60 * 60 * 1000, // 24 часа в миллисекундах
+            maxAge: 24 * 60 * 60 * 1000,
             sameSite: 'strict',
         });
 
-        // Токен также возвращаем в JSON — нужен клиенту для Socket.io
         return res.status(200).json({
             token,
             user: {
@@ -3693,11 +3582,6 @@ async function login(req, res, next) {
     }
 }
 
-/**
- * Выход пользователя.
- * POST /api/auth/logout
- * Очищает httpOnly куку с токеном.
- */
 function logout(req, res) {
     res.clearCookie('token');
     return res.status(200).json({ message: 'Выход выполнен' });
@@ -3709,19 +3593,9 @@ module.exports = { register, login, logout };
 ФАЙЛ: server\controllers\profileController.js
 ========================================
 
-/**
- * profileController.js вЂ” РєРѕРЅС‚СЂРѕР»Р»РµСЂ РїСЂРѕС„РёР»СЏ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ.
- * РџРѕР»СѓС‡РµРЅРёРµ РґР°РЅРЅС‹С…, СЃРјРµРЅР° Р»РѕРіРёРЅР°/РїР°СЂРѕР»СЏ, РµР¶РµС‡Р°СЃРЅС‹Рµ С„РёС€РєРё, СѓРґР°Р»РµРЅРёРµ Р°РєРєР°СѓРЅС‚Р°.
- */
-
 const bcrypt = require('bcryptjs');
 const pool = require('../config/db');
 
-/**
- * GET /api/profile/me
- * Р’РѕР·РІСЂР°С‰Р°РµС‚ РґР°РЅРЅС‹Рµ С‚РµРєСѓС‰РµРіРѕ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ.
- * РўРѕРєРµРЅ С‡РёС‚Р°РµС‚СЃСЏ РёР· httpOnly РєСѓРєРё С‡РµСЂРµР· expressAuth middleware.
- */
 async function getMe(req, res, next) {
     try {
         const result = await pool.query(
@@ -3737,12 +3611,6 @@ async function getMe(req, res, next) {
     }
 }
 
-/**
- * POST /api/profile/claim-chips
- * РќР°С‡РёСЃР»СЏРµС‚ 500 С„РёС€РµРє СЂР°Р· РІ С‡Р°СЃ.
- * РџСЂРѕРІРµСЂСЏРµС‚ last_claim_at вЂ” РµСЃР»Рё РїСЂРѕС€Р»Рѕ РјРµРЅСЊС€Рµ С‡Р°СЃР°, РІРѕР·РІСЂР°С‰Р°РµС‚ РѕС€РёР±РєСѓ
- * СЃ РєРѕР»РёС‡РµСЃС‚РІРѕРј СЃРµРєСѓРЅРґ РґРѕ СЃР»РµРґСѓСЋС‰РµРіРѕ РїРѕР»СѓС‡РµРЅРёСЏ.
- */
 async function claimChips(req, res, next) {
     try {
         const result = await pool.query(
@@ -3752,7 +3620,6 @@ async function claimChips(req, res, next) {
         const user = result.rows[0];
         const now = new Date();
 
-        // РџСЂРѕРІРµСЂСЏРµРј РєСѓР»РґР°СѓРЅ: РїСЂРѕС€С‘Р» Р»Рё С‡Р°СЃ СЃ РїРѕСЃР»РµРґРЅРµРіРѕ РїРѕР»СѓС‡РµРЅРёСЏ С„РёС€РµРє
         if (user.last_claim_at) {
             const secondsSinceClaim = (now - new Date(user.last_claim_at)) / 1000;
             const cooldownSeconds = 3600; // 1 С‡Р°СЃ
@@ -3766,7 +3633,6 @@ async function claimChips(req, res, next) {
             }
         }
 
-        // РќР°С‡РёСЃР»СЏРµРј 500 С„РёС€РµРє Рё РѕР±РЅРѕРІР»СЏРµРј РІСЂРµРјСЏ РїРѕСЃР»РµРґРЅРµРіРѕ РїРѕР»СѓС‡РµРЅРёСЏ
         const updated = await pool.query(
             'UPDATE users SET chips = chips + 500, last_claim_at = $1 WHERE id = $2 RETURNING chips',
             [now, req.user.userId]
@@ -3781,11 +3647,6 @@ async function claimChips(req, res, next) {
     }
 }
 
-/**
- * PUT /api/profile/username
- * РЎРјРµРЅР° Р»РѕРіРёРЅР°. РўСЂРµР±СѓРµС‚ РїРѕРґС‚РІРµСЂР¶РґРµРЅРёСЏ С‚РµРєСѓС‰РµРіРѕ РїР°СЂРѕР»СЏ.
- * Body: { newUsername, password }
- */
 async function changeUsername(req, res, next) {
     try {
         const { newUsername, password } = req.body;
@@ -3827,11 +3688,6 @@ async function changeUsername(req, res, next) {
     }
 }
 
-/**
- * PUT /api/profile/password
- * РЎРјРµРЅР° РїР°СЂРѕР»СЏ. РўСЂРµР±СѓРµС‚ С‚РµРєСѓС‰РёР№ РїР°СЂРѕР»СЊ.
- * Body: { currentPassword, newPassword }
- */
 async function changePassword(req, res, next) {
     try {
         const { currentPassword, newPassword } = req.body;
@@ -3865,11 +3721,6 @@ async function changePassword(req, res, next) {
     }
 }
 
-/**
- * DELETE /api/profile
- * РЈРґР°Р»РµРЅРёРµ Р°РєРєР°СѓРЅС‚Р°. РўСЂРµР±СѓРµС‚ РїРѕРґС‚РІРµСЂР¶РґРµРЅРёСЏ РїР°СЂРѕР»СЏ.
- * Body: { password }
- */
 async function deleteAccount(req, res, next) {
     try {
         const { password } = req.body;
@@ -3903,10 +3754,6 @@ module.exports = { getMe, claimChips, changeUsername, changePassword, deleteAcco
 ФАЙЛ: server\game\chipWallet.js
 ========================================
 
-/**
- * chipWallet.js вЂ” РѕРїРµСЂР°С†РёРё СЃ Р±Р°Р»Р°РЅСЃРѕРј С„РёС€РµРє РЅР° СЃС‡С‘С‚Рµ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ.
- */
-
 const pool = require('../config/db');
 
 async function getBalance(userId) {
@@ -3914,9 +3761,6 @@ async function getBalance(userId) {
     return result.rows[0]?.chips ?? 0;
 }
 
-/**
- * РЎРїРёСЃР°С‚СЊ С„РёС€РєРё (Р±Р°Р№-РёРЅ). РђС‚РѕРјР°СЂРЅРѕ: РЅРµ СЃРїРёСЃС‹РІР°РµС‚, РµСЃР»Рё РЅРµРґРѕСЃС‚Р°С‚РѕС‡РЅРѕ.
- */
 async function deductChips(userId, amount) {
     const result = await pool.query(
         'UPDATE users SET chips = chips - $2 WHERE id = $1 AND chips >= $2 RETURNING chips',
@@ -3929,9 +3773,6 @@ async function deductChips(userId, amount) {
     return { ok: true, chips: result.rows[0].chips };
 }
 
-/**
- * Р’РµСЂРЅСѓС‚СЊ С„РёС€РєРё РЅР° СЃС‡С‘С‚ (РєСЌС€Р°СѓС‚ СЃРѕ СЃС‚РѕР»Р°).
- */
 async function addChips(userId, amount) {
     if (amount <= 0) {
         const chips = await getBalance(userId);
@@ -3946,37 +3787,24 @@ async function addChips(userId, amount) {
 
 module.exports = { getBalance, deductChips, addChips };
 
-
 ========================================
 ФАЙЛ: server\game\deck.js
 ========================================
 
-/**
- * deck.js вЂ” РєРѕР»РѕРґР° РєР°СЂС‚.
- * РЎРѕР·РґР°С‘С‚ СЃС‚Р°РЅРґР°СЂС‚РЅСѓСЋ РєРѕР»РѕРґСѓ РёР· 52 РєР°СЂС‚, С‚Р°СЃСѓРµС‚ Рё СЂР°Р·РґР°С‘С‚.
- */
-
-// Р Р°РЅРіРё Рё РјР°СЃС‚Рё
 const RANKS = ['2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'A'];
 const SUITS = ['h', 'd', 'c', 's']; // hearts, diamonds, clubs, spades
 
-// Р§РёСЃР»РѕРІС‹Рµ Р·РЅР°С‡РµРЅРёСЏ СЂР°РЅРіРѕРІ РґР»СЏ СЃСЂР°РІРЅРµРЅРёСЏ
 const RANK_VALUES = {
     '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8,
     '9': 9, 'T': 10, 'J': 11, 'Q': 12, 'K': 13, 'A': 14,
 };
 
-// Р§РёС‚Р°РµРјС‹Рµ РЅР°Р·РІР°РЅРёСЏ РґР»СЏ РєР»РёРµРЅС‚Р°
 const RANK_NAMES = {
     '2': '2', '3': '3', '4': '4', '5': '5', '6': '6', '7': '7',
     '8': '8', '9': '9', 'T': '10', 'J': 'J', 'Q': 'Q', 'K': 'K', 'A': 'A',
 };
 const SUIT_NAMES = { h: 'в™Ґ', d: 'в™¦', c: 'в™Ј', s: 'в™ ' };
 
-/**
- * РЎРѕР·РґР°С‘С‚ РЅРѕРІСѓСЋ РєРѕР»РѕРґСѓ РёР· 52 РєР°СЂС‚.
- * РљР°Р¶РґР°СЏ РєР°СЂС‚Р°: { rank, suit, value, display }
- */
 function createDeck() {
     const deck = [];
     for (const suit of SUITS) {
@@ -3992,10 +3820,6 @@ function createDeck() {
     return deck;
 }
 
-/**
- * РўР°СЃСѓРµС‚ РєРѕР»РѕРґСѓ Р°Р»РіРѕСЂРёС‚РјРѕРј Р¤РёС€РµСЂР°-Р™РµС‚СЃР°.
- * Р’РѕР·РІСЂР°С‰Р°РµС‚ РЅРѕРІСѓСЋ РїРµСЂРµС‚Р°СЃРѕРІР°РЅРЅСѓСЋ РєРѕРїРёСЋ.
- */
 function shuffle(deck) {
     const d = [...deck];
     for (let i = d.length - 1; i > 0; i--) {
@@ -4005,10 +3829,6 @@ function shuffle(deck) {
     return d;
 }
 
-/**
- * РЎРЅРёРјР°РµС‚ n РєР°СЂС‚ СЃ РІРµСЂС…Р° РєРѕР»РѕРґС‹.
- * РР·РјРµРЅСЏРµС‚ РёСЃС…РѕРґРЅС‹Р№ РјР°СЃСЃРёРІ!
- */
 function deal(deck, n = 1) {
     return deck.splice(0, n);
 }
@@ -4019,75 +3839,50 @@ module.exports = { createDeck, shuffle, deal, RANK_VALUES };
 ФАЙЛ: server\game\gameLogic.js
 ========================================
 
-/**
- * GameLogic.js вЂ” РѕСЃРЅРѕРІРЅР°СЏ РёРіСЂРѕРІР°СЏ Р»РѕРіРёРєР° РўРµС…Р°СЃСЃРєРѕРіРѕ РҐРѕР»РґРµРјР°.
- *
- * РЈРїСЂР°РІР»СЏРµС‚ РѕРґРЅРѕР№ РёРіСЂРѕР№ Р·Р° РѕРґРЅРёРј СЃС‚РѕР»РѕРј:
- *   - Р Р°Р·РґР°С‡Р° РєР°СЂС‚
- *   - Р‘Р»Р°Р№РЅРґС‹
- *   - Р Р°СѓРЅРґС‹ СЃС‚Р°РІРѕРє (РїСЂРµС„Р»РѕРї, С„Р»РѕРї, С‚С‘СЂРЅ, СЂРёРІРµСЂ)
- *   - Р¤РѕР»Рґ / Р§РµРє / РљРѕР»Р» / Р РµР№Р· / РћР»Р»-РёРЅ
- *   - РЎР°Р№Рґ-РїРѕС‚С‹
- *   - РЁРѕСѓРґР°СѓРЅ Рё СЂР°СЃРїСЂРµРґРµР»РµРЅРёРµ РІС‹РёРіСЂС‹С€Р°
- *
- * РСЃРїСѓСЃРєР°РµС‚ СЃРѕР±С‹С‚РёСЏ С‡РµСЂРµР· callback onEvent(eventName, data),
- * РєРѕС‚РѕСЂС‹Рµ RoomManager С‚СЂР°РЅСЃР»РёСЂСѓРµС‚ С‡РµСЂРµР· Socket.io.
- */
-
 const { createDeck, shuffle, deal } = require('./deck');
 const { evaluateBest } = require('./handEvaluator');
 const { calculatePots, distributePots } = require('./potManager');
 
-// Р¤Р°Р·С‹ РёРіСЂС‹
 const PHASES = {
-    WAITING:  'waiting',   // Р¶РґС‘Рј РёРіСЂРѕРєРѕРІ
-    PREFLOP:  'preflop',   // РєР°СЂС‚С‹ СЂРѕР·РґР°РЅС‹, РїРµСЂРІС‹Р№ СЂР°СѓРЅРґ СЃС‚Р°РІРѕРє
-    FLOP:     'flop',      // 3 РѕР±С‰РёРµ РєР°СЂС‚С‹
-    TURN:     'turn',      // 4-СЏ РєР°СЂС‚Р°
-    RIVER:    'river',     // 5-СЏ РєР°СЂС‚Р°
-    SHOWDOWN: 'showdown',  // РІСЃРєСЂС‹С‚РёРµ РєР°СЂС‚
-    ENDED:    'ended',     // СЂР°Р·РґР°С‡Р° РѕРєРѕРЅС‡РµРЅР°
+    WAITING:  'waiting',
+    PREFLOP:  'preflop',
+    FLOP:     'flop',
+    TURN:     'turn',
+    RIVER:    'river',
+    SHOWDOWN: 'showdown',
+    ENDED:    'ended',
 };
 
-// РЎС‚Р°С‚СѓСЃС‹ РёРіСЂРѕРєР° РІ С‚РµРєСѓС‰РµР№ СЂР°Р·РґР°С‡Рµ
 const PLAYER_STATUS = {
-    ACTIVE: 'active',   // РІ РёРіСЂРµ, РјРѕР¶РµС‚ РґРµР»Р°С‚СЊ СЃС‚Р°РІРєРё
-    FOLDED: 'folded',   // СЃР±СЂРѕСЃРёР» РєР°СЂС‚С‹
-    ALL_IN: 'allIn',    // РїРѕС€С‘Р» РІР°-Р±Р°РЅРє
-    OUT:    'out',      // РЅРµС‚ С„РёС€РµРє, РЅРµ РІ РёРіСЂРµ
+    ACTIVE: 'active',
+    FOLDED: 'folded',
+    ALL_IN: 'allIn',
+    OUT:    'out',
 };
 
 class GameLogic {
-    /**
-     * @param {Object} config вЂ” РЅР°СЃС‚СЂРѕР№РєРё СЃС‚РѕР»Р°:
-     *   { smallBlind, bigBlind, minBuyIn, maxBuyIn, maxPlayers }
-     * @param {Function} onEvent вЂ” callback(eventName, data) РґР»СЏ РѕС‚РїСЂР°РІРєРё СЃРѕР±С‹С‚РёР№
-     */
+
     constructor(config, onEvent) {
         this.config = config;
         this.onEvent = onEvent || (() => {});
 
-        // РњРµСЃС‚Р° Р·Р° СЃС‚РѕР»РѕРј: РјР°СЃСЃРёРІ РёР· maxPlayers СЃР»РѕС‚РѕРІ (null = РїСѓСЃС‚Рѕ)
         this.seats = new Array(config.maxPlayers).fill(null);
 
         this.phase = PHASES.WAITING;
         this.deck = [];
-        this.communityCards = [];    // РѕР±С‰РёРµ РєР°СЂС‚С‹ РЅР° СЃС‚РѕР»Рµ
+        this.communityCards = [];
 
-        this.dealerSeat = 0;         // РїРѕР·РёС†РёСЏ РґРёР»РµСЂР° (РґРІРёРіР°РµС‚СЃСЏ РєР°Р¶РґСѓСЋ СЂР°Р·РґР°С‡Сѓ)
-        this.currentSeat = -1;       // С‡СЊСЏ СЃРµР№С‡Р°СЃ РѕС‡РµСЂРµРґСЊ РґРµР№СЃС‚РІРѕРІР°С‚СЊ
+        this.dealerSeat = 0;
+        this.currentSeat = -1;
 
-        // РЎРѕСЃС‚РѕСЏРЅРёРµ С‚РµРєСѓС‰РµРіРѕ СЂР°СѓРЅРґР° СЃС‚Р°РІРѕРє
-        this.currentBet = 0;         // С‚РµРєСѓС‰Р°СЏ РјР°РєСЃРёРјР°Р»СЊРЅР°СЏ СЃС‚Р°РІРєР° РІ СЌС‚РѕРј СЃС‚СЂРёС‚Рµ
-        this.streetBets = {};        // { playerId: СЃС‚Р°РІРєР° РІ СЌС‚РѕРј СЃС‚СЂРёС‚Рµ }
-        this.toAct = [];             // РѕС‡РµСЂРµРґСЊ РёРіСЂРѕРєРѕРІ, РєРѕС‚РѕСЂС‹Рј РЅСѓР¶РЅРѕ РґРµР№СЃС‚РІРѕРІР°С‚СЊ
-        this.lastRaiseAmount = 0;    // СЂР°Р·РјРµСЂ РїРѕСЃР»РµРґРЅРµРіРѕ РїРѕРІС‹С€РµРЅРёСЏ (РґР»СЏ РјРёРЅРёРјР°Р»СЊРЅРѕРіРѕ СЂРµР№Р·Р°)
-        this.minRaise = 0;           // РјРёРЅРёРјР°Р»СЊРЅС‹Р№ СЂРµР№Р·
+        this.currentBet = 0;
+        this.streetBets = {};
+        this.toAct = [];
+        this.lastRaiseAmount = 0;
+        this.minRaise = 0;
 
-        // РЎСѓРјРјР°СЂРЅС‹Рµ РІРєР»Р°РґС‹ Р·Р° РІСЃСЋ СЂР°Р·РґР°С‡Сѓ (РЅСѓР¶РЅРѕ РґР»СЏ СЃР°Р№Рґ-РїРѕС‚РѕРІ)
-        this.totalContributed = {};  // { playerId: СЃСѓРјРјР° }
+        this.totalContributed = {};
 
-        // РљС‚Рѕ СѓР¶Рµ СЃРґРµР»Р°Р» С…РѕРґ РЅР° С‚РµРєСѓС‰РµР№ СѓР»РёС†Рµ (СЃР±СЂР°СЃС‹РІР°РµС‚СЃСЏ РїСЂРё СЂРµР№Р·Рµ)
         this.actedThisStreet = new Set();
     }
 
@@ -4095,10 +3890,6 @@ class GameLogic {
     //  РЈРїСЂР°РІР»РµРЅРёРµ РёРіСЂРѕРєР°РјРё (СЃРµСЃС‚СЊ / РІСЃС‚Р°С‚СЊ)
     // ============================================================
 
-    /**
-     * РџРѕСЃР°РґРёС‚СЊ РёРіСЂРѕРєР° Р·Р° СЃС‚РѕР».
-     * @returns {number} РЅРѕРјРµСЂ Р·Р°РЅСЏС‚РѕРіРѕ РјРµСЃС‚Р° РёР»Рё -1 РµСЃР»Рё РјРµСЃС‚ РЅРµС‚
-     */
     sitDown(playerId, username, chips) {
         const seatIdx = this.seats.findIndex(s => s === null);
         if (seatIdx === -1) return -1;
@@ -4116,9 +3907,6 @@ class GameLogic {
         return seatIdx;
     }
 
-    /**
-     * РЈР±СЂР°С‚СЊ РёРіСЂРѕРєР° СЃРѕ СЃС‚РѕР»Р°.
-     */
     standUp(playerId) {
         const idx = this.seats.findIndex(s => s?.id === playerId);
         if (idx === -1) return;
@@ -4137,17 +3925,14 @@ class GameLogic {
         return this.seats.findIndex(s => s?.id != null && String(s.id) === pid);
     }
 
-    /** Р’СЃРµ Р·Р°РЅСЏС‚С‹Рµ РјРµСЃС‚Р° */
     getOccupiedSeats() {
         return this.seats.filter(s => s !== null);
     }
 
-    /** РРіСЂРѕРєРё, СѓС‡Р°СЃС‚РІСѓСЋС‰РёРµ РІ С‚РµРєСѓС‰РµР№ СЂР°Р·РґР°С‡Рµ (РЅРµ OUT) */
     getHandPlayers() {
         return this.seats.filter(s => s !== null && s.status !== PLAYER_STATUS.OUT);
     }
 
-    /** РРіСЂРѕРєРё, РєРѕС‚РѕСЂС‹Рµ РµС‰С‘ РјРѕРіСѓС‚ РґРµР»Р°С‚СЊ СЃС‚Р°РІРєРё (РЅРµ С„РѕР»Рґ, РЅРµ РѕР»Р»-РёРЅ) */
     getActivePlayers() {
         return this.seats.filter(s => s?.status === PLAYER_STATUS.ACTIVE);
     }
@@ -4156,11 +3941,6 @@ class GameLogic {
     //  РЎС‚Р°СЂС‚ РЅРѕРІРѕР№ СЂР°Р·РґР°С‡Рё
     // ============================================================
 
-    /**
-     * РќР°С‡Р°С‚СЊ РЅРѕРІСѓСЋ СЂР°Р·РґР°С‡Сѓ. Р’С‹Р·С‹РІР°С‚СЊ РїРѕСЃР»Рµ ENDED РёР»Рё РІ РїРµСЂРІС‹Р№ СЂР°Р·.
-     * @param {string[]} readyPlayerIds вЂ” С‚РѕР»СЊРєРѕ СЌС‚Рё РёРіСЂРѕРєРё СѓС‡Р°СЃС‚РІСѓСЋС‚ РІ СЂР°Р·РґР°С‡Рµ
-     * РњРёРЅРёРјСѓРј 2 РіРѕС‚РѕРІС‹С… РёРіСЂРѕРєР° СЃ С„РёС€РєР°РјРё.
-     */
     startHand(readyPlayerIds = []) {
         const readySet = new Set(readyPlayerIds.map(String));
 
@@ -4178,10 +3958,8 @@ class GameLogic {
             return false;
         }
 
-        // РЎРґРІРёРіР°РµРј РґРёР»РµСЂР° РЅР° СЃР»РµРґСѓСЋС‰РµРіРѕ РёРіСЂРѕРєР° СЃ С„РёС€РєР°РјРё
         this.dealerSeat = this._nextOccupiedSeat(this.dealerSeat);
 
-        // РџРµСЂРµРјРµС€РёРІР°РµРј Рё СЂР°Р·РґР°С‘Рј РїРѕ 2 РєР°СЂС‚С‹
         this.deck = shuffle(createDeck());
         this.communityCards = [];
         this.totalContributed = {};
@@ -4200,14 +3978,11 @@ class GameLogic {
             players: this._getPublicState(),
         });
 
-        this._emitPlayerHoleCards(); // РѕС‚РїСЂР°РІР»СЏРµРј РєР°Р¶РґРѕРјСѓ РµРіРѕ РєР°СЂС‚С‹ РїСЂРёРІР°С‚РЅРѕ
+        this._emitPlayerHoleCards();
         this._emitTurn();
         return true;
     }
 
-    /**
-     * Р’С‹СЃС‚Р°РІРёС‚СЊ Р±Р»Р°Р№РЅРґС‹ Рё РЅР°СЃС‚СЂРѕРёС‚СЊ РїРµСЂРІС‹Р№ СЂР°СѓРЅРґ СЃС‚Р°РІРѕРє.
-     */
     _postBlindsAndStartBetting() {
         const sbSeat = this._nextOccupiedSeat(this.dealerSeat);
         const bbSeat = this._nextOccupiedSeat(sbSeat);
@@ -4220,7 +3995,6 @@ class GameLogic {
         this.lastRaiseAmount = this.config.bigBlind;
         this.minRaise = this.config.bigBlind * 2;
 
-        // РџСЂРёРЅСѓРґРёС‚РµР»СЊРЅС‹Рµ СЃС‚Р°РІРєРё
         this._placeForcedBet(sb, this.config.smallBlind);
         this._placeForcedBet(bb, this.config.bigBlind);
 
@@ -4237,7 +4011,6 @@ class GameLogic {
         this.toAct = this._buildActionQueue(utgSeat, null);
     }
 
-    /** РџСЂРёРЅСѓРґРёС‚РµР»СЊРЅР°СЏ СЃС‚Р°РІРєР° (Р±Р»Р°Р№РЅРґ) вЂ” РјРѕР¶РµС‚ РїРµСЂРµРІРµСЃС‚Рё РІ РѕР»Р»-РёРЅ */
     _placeForcedBet(player, amount) {
         const actual = Math.min(amount, player.chips);
         player.chips -= actual;
@@ -4253,15 +4026,6 @@ class GameLogic {
     //  РћР±СЂР°Р±РѕС‚РєР° РґРµР№СЃС‚РІРёР№ РёРіСЂРѕРєР°
     // ============================================================
 
-    /**
-     * РћСЃРЅРѕРІРЅРѕР№ РјРµС‚РѕРґ: РѕР±СЂР°Р±РѕС‚Р°С‚СЊ РґРµР№СЃС‚РІРёРµ С‚РµРєСѓС‰РµРіРѕ РёРіСЂРѕРєР°.
-     *
-     * @param {string} playerId
-     * @param {string} action вЂ” 'fold' | 'check' | 'call' | 'raise' | 'allIn'
-     * @param {number} amount вЂ” РґР»СЏ 'raise': РёС‚РѕРіРѕРІС‹Р№ СЂР°Р·РјРµСЂ СЃС‚Р°РІРєРё (РЅРµ РїСЂРёР±Р°РІРєР°!)
-     *
-     * @returns {{ ok: boolean, error?: string }}
-     */
     handleAction(playerId, action, amount = 0) {
         if (this.phase === PHASES.WAITING || this.phase === PHASES.ENDED) {
             return { ok: false, error: 'РРіСЂР° РЅРµ РёРґС‘С‚' };
@@ -4315,7 +4079,6 @@ class GameLogic {
             players: this._getPublicState(),
         });
 
-        // РџРѕСЃР»Рµ СЂРµР№Р·Р° РѕС‡РµСЂРµРґСЊ СѓР¶Рµ РїРµСЂРµСЃС‚СЂРѕРµРЅР° вЂ” РЅРµ СЃРґРІРёРіР°РµРј (РёРЅР°С‡Рµ РїСЂРѕРїСѓСЃРєР°РµС‚СЃСЏ С‡СѓР¶РѕР№ С…РѕРґ)
         if (!result.reopenedBetting) {
             if (this.toAct[0] === playerId) {
                 this.toAct.shift();
@@ -4350,9 +4113,6 @@ class GameLogic {
         return { ok: true };
     }
 
-    /**
-     * РџСЂРёРЅСѓРґРёС‚РµР»СЊРЅС‹Р№ С„РѕР»Рґ (РІС‹С…РѕРґ РёР·-Р·Р° СЃС‚РѕР»Р° РІРѕ РІСЂРµРјСЏ СЂР°Р·РґР°С‡Рё).
-     */
     forceFold(playerId) {
         const player = this.getPlayer(playerId);
         if (!player || player.status === PLAYER_STATUS.FOLDED || player.status === PLAYER_STATUS.OUT) {
@@ -4398,7 +4158,6 @@ class GameLogic {
     }
 
     _doCall(player, toCall) {
-        // Р•СЃР»Рё РЅРµ С…РІР°С‚Р°РµС‚ С„РёС€РµРє вЂ” СѓС…РѕРґРёРј РІ РѕР»Р»-РёРЅ
         const actual = Math.min(toCall, player.chips);
         player.chips -= actual;
         this.streetBets[player.id] = (this.streetBets[player.id] || 0) + actual;
@@ -4411,7 +4170,6 @@ class GameLogic {
     }
 
     _doRaise(player, totalBetAmount, myBet) {
-        // totalBetAmount вЂ” РёС‚РѕРіРѕРІР°СЏ СЃС‚Р°РІРєР° РёРіСЂРѕРєР° (РЅРµ РїСЂРёР±Р°РІРєР°)
         const minTotal = this.currentBet + this.lastRaiseAmount;
         if (totalBetAmount < minTotal) {
             return {
@@ -4428,7 +4186,6 @@ class GameLogic {
         this.streetBets[player.id] = totalBetAmount;
         this.totalContributed[player.id] = (this.totalContributed[player.id] || 0) + toAdd;
 
-        // Р—Р°РїРѕРјРёРЅР°РµРј СЂР°Р·РјРµСЂ СЂРµР№Р·Р° РґР»СЏ СЃР»РµРґСѓСЋС‰РµРіРѕ РјРёРЅРёРјР°Р»СЊРЅРѕРіРѕ СЂРµР№Р·Р°
         this.lastRaiseAmount = totalBetAmount - this.currentBet;
         this.currentBet = totalBetAmount;
 
@@ -4481,7 +4238,6 @@ class GameLogic {
     // ============================================================
 
     _advancePhase() {
-        // Р•СЃР»Рё РІСЃРµ РѕСЃС‚Р°РІС€РёРµСЃСЏ РёРіСЂРѕРєРё РІ РѕР»Р»-РёРЅ вЂ” РѕС‚РєСЂС‹РІР°РµРј РєР°СЂС‚С‹ Р±РµР· СЃС‚Р°РІРѕРє
         const canAct = this.getActivePlayers();
 
         switch (this.phase) {
@@ -4518,7 +4274,6 @@ class GameLogic {
         const firstSeat = this._nextOccupiedSeat(this.dealerSeat);
         this.toAct = this._buildActionQueue(firstSeat, null);
 
-        // Р•СЃР»Рё РЅРµРєРѕРјСѓ СЃС‚Р°РІРёС‚СЊ (РІСЃРµ РІ РѕР»Р»-РёРЅ) вЂ” РїСЂРѕРїСѓСЃРєР°РµРј СЃС‚СЂРёС‚
         if (this.toAct.length === 0 || canAct.length < 2) {
             this._advancePhase();
             return;
@@ -4534,7 +4289,6 @@ class GameLogic {
     _doShowdown() {
         this.phase = PHASES.SHOWDOWN;
 
-        // РћС†РµРЅРёРІР°РµРј СЂСѓРєРё РІСЃРµС… РЅРµ-С„РѕР»РґРЅСѓРІС€РёС… РёРіСЂРѕРєРѕРІ
         const evaluations = this.getHandPlayers()
             .filter(p => p.status !== PLAYER_STATUS.FOLDED)
             .map(p => ({
@@ -4544,7 +4298,6 @@ class GameLogic {
                 holeCards: p.holeCards,
             }));
 
-        // РЎС‡РёС‚Р°РµРј РїРѕС‚С‹ (РѕСЃРЅРѕРІРЅРѕР№ + СЃР°Р№Рґ-РїРѕС‚С‹)
         const potPlayers = this.getHandPlayers().map(p => ({
             id: p.id,
             totalContributed: this.totalContributed[p.id] || 0,
@@ -4588,7 +4341,6 @@ class GameLogic {
         });
     }
 
-    /** Р Р°Р·РґР°С‡Р° Р·Р°РєР°РЅС‡РёРІР°РµС‚СЃСЏ Р±РµР· С€РѕСѓРґР°СѓРЅР° вЂ” РїРѕСЃР»РµРґРЅРёР№ РѕСЃС‚Р°РІС€РёР№СЃСЏ Р·Р°Р±РёСЂР°РµС‚ Р±Р°РЅРє */
     _endHandWithoutShowdown(winner) {
         const totalPot = this._getTotalPot();
         winner.chips += totalPot;
@@ -4608,14 +4360,12 @@ class GameLogic {
     //  Р’СЃРїРѕРјРѕРіР°С‚РµР»СЊРЅС‹Рµ РјРµС‚РѕРґС‹
     // ============================================================
 
-    /** РќСѓР¶РЅРѕ Р»Рё РёРіСЂРѕРєСѓ РµС‰С‘ РґРµР№СЃС‚РІРѕРІР°С‚СЊ РЅР° СЌС‚РѕР№ СѓР»РёС†Рµ */
     _hasPendingAction(player) {
         if (player.status !== PLAYER_STATUS.ACTIVE) return false;
         if ((this.streetBets[player.id] || 0) < this.currentBet) return true;
         return !this.actedThisStreet.has(player.id);
     }
 
-    /** Р’СЃРµ Р°РєС‚РёРІРЅС‹Рµ РёРіСЂРѕРєРё СѓСЂР°РІРЅСЏР»Рё СЃС‚Р°РІРєРё Рё СЃРґРµР»Р°Р»Рё С…РѕРґ */
     _bettingRoundComplete() {
         const active = this.getActivePlayers();
         if (active.length === 0) return true;
@@ -4627,9 +4377,6 @@ class GameLogic {
         this.toAct = this._buildActionQueue(firstSeat, null);
     }
 
-    /**
-     * РћС‡РµСЂРµРґСЊ С…РѕРґРѕРІ: РёРіСЂРѕРєРё, РєРѕС‚РѕСЂС‹Рј РЅСѓР¶РЅРѕ СѓСЂР°РІРЅСЏС‚СЊ СЃС‚Р°РІРєСѓ РёР»Рё РѕС‚РІРµС‚РёС‚СЊ РЅР° СЂРµР№Р·.
-     */
     _buildActionQueue(startSeat, excludeId = null) {
         const queue = [];
         let seat = startSeat;
@@ -4647,7 +4394,6 @@ class GameLogic {
         return queue;
     }
 
-    /** РЎР»РµРґСѓСЋС‰РµРµ Р·Р°РЅСЏС‚РѕРµ РјРµСЃС‚Рѕ СЃ С„РёС€РєР°РјРё (РїРѕ РєСЂСѓРіСѓ) */
     _nextOccupiedSeat(fromSeat) {
         let seat = (fromSeat + 1) % this.seats.length;
         for (let i = 0; i < this.seats.length; i++) {
@@ -4658,12 +4404,10 @@ class GameLogic {
         return fromSeat;
     }
 
-    /** РЎСѓРјРјР° РІСЃРµС… СЃС‚Р°РІРѕРє РІ С‚РµРєСѓС‰РµР№ СЂР°Р·РґР°С‡Рµ (РІРєР»СЋС‡Р°СЏ РїСЂРµРґС‹РґСѓС‰РёРµ СЃС‚СЂРёС‚С‹) */
     _getTotalPot() {
         return Object.values(this.totalContributed).reduce((a, b) => a + b, 0);
     }
 
-    /** РћР±РЅСѓР»СЏРµРј РІРєР»Р°РґС‹ РІ Р±Р°РЅРє РїРѕСЃР»Рµ Р·Р°РІРµСЂС€РµРЅРёСЏ СЂР°Р·РґР°С‡Рё */
     _clearPotContributions() {
         this.streetBets = {};
         for (const seat of this.seats) {
@@ -4671,7 +4415,6 @@ class GameLogic {
         }
     }
 
-    /** РџСѓР±Р»РёС‡РЅРѕРµ СЃРѕСЃС‚РѕСЏРЅРёРµ (Р±РµР· РєР°СЂС‚ РґСЂСѓРіРёС… РёРіСЂРѕРєРѕРІ) */
     _getPublicState() {
         return this.seats.map((s, idx) => {
             if (!s) return null;
@@ -4683,15 +4426,10 @@ class GameLogic {
                 status: s.status,
                 bet: this.streetBets[s.id] || 0,
                 totalContributed: this.totalContributed[s.id] || 0,
-                // РєР°СЂС‚С‹ РЅРµ СЂР°СЃРєСЂС‹РІР°РµРј
             };
         });
     }
 
-    /**
-     * Р’РѕР·РІСЂР°С‰Р°РµС‚ СЃРѕСЃС‚РѕСЏРЅРёРµ РёРіСЂС‹ СЃ С‚РѕС‡РєРё Р·СЂРµРЅРёСЏ РєРѕРЅРєСЂРµС‚РЅРѕРіРѕ РёРіСЂРѕРєР°:
-     * РµРіРѕ РєР°СЂС‚С‹ РѕС‚РєСЂС‹С‚С‹, С‡СѓР¶РёРµ вЂ” РЅРµС‚.
-     */
     getStateForPlayer(playerId) {
         return {
             phase: this.phase,
@@ -4709,24 +4447,21 @@ class GameLogic {
                     chips: s.chips,
                     status: s.status,
                     bet: this.streetBets[s.id] || 0,
-                    // РљР°СЂС‚С‹: СЃРІРѕРёС… РїРѕРєР°Р·С‹РІР°РµРј, С‡СѓР¶РёС… вЂ” РЅРµС‚
                     holeCards: s.id === playerId ? s.holeCards : s.holeCards.map(() => ({ hidden: true })),
                 };
             }),
         };
     }
 
-    /** РћС‚РїСЂР°РІР»СЏРµРј РєР°Р¶РґРѕРјСѓ РёРіСЂРѕРєСѓ РµРіРѕ РєР°СЂС‚С‹ РїСЂРёРІР°С‚РЅРѕ */
     _emitPlayerHoleCards() {
         for (const player of this.getHandPlayers()) {
             this.onEvent('deal-hole-cards', {
-                targetPlayerId: player.id, // RoomManager РѕС‚РїСЂР°РІРёС‚ С‚РѕР»СЊРєРѕ СЌС‚РѕРјСѓ РёРіСЂРѕРєСѓ
+                targetPlayerId: player.id,
                 holeCards: player.holeCards,
             });
         }
     }
 
-    /** РћРїРѕРІРµС‰Р°РµРј РІСЃРµС…, С‡СЊСЏ РѕС‡РµСЂРµРґСЊ С…РѕРґРёС‚СЊ */
     _emitTurn() {
         const currentPlayerId = this.toAct[0];
         if (!currentPlayerId) return;
@@ -4821,33 +4556,10 @@ async function deleteGameState(roomId) {
 
 module.exports = { saveGameState, loadGameState, deleteGameState };
 
-
 ========================================
 ФАЙЛ: server\game\handEvaluator.js
 ========================================
 
-/**
- * handEvaluator.js вЂ” РѕРїСЂРµРґРµР»РµРЅРёРµ СЃРёР»С‹ РїРѕРєРµСЂРЅРѕР№ СЂСѓРєРё.
- *
- * РџСЂРёРЅРёРјР°РµС‚ 2 РєР°СЂРјР°РЅРЅС‹Рµ + РґРѕ 5 РѕР±С‰РёС… РєР°СЂС‚, РЅР°С…РѕРґРёС‚ Р»СѓС‡С€СѓСЋ РёР· РІСЃРµС…
- * РєРѕРјР±РёРЅР°С†РёР№ C(7,5) = 21. Р’РѕР·РІСЂР°С‰Р°РµС‚ СЂР°РЅРі, С‡РёСЃР»РѕРІРѕР№ score РґР»СЏ
- * СЃСЂР°РІРЅРµРЅРёСЏ Рё С‡РёС‚Р°РµРјРѕРµ РЅР°Р·РІР°РЅРёРµ РєРѕРјР±РёРЅР°С†РёРё.
- *
- * Р Р°РЅРіРё РєРѕРјР±РёРЅР°С†РёР№:
- *   8 вЂ” РЎС‚СЂРёС‚-С„Р»РµС€ (РІРєР»СЋС‡Р°СЏ Р РѕСЏР»)
- *   7 вЂ” РљР°СЂРµ
- *   6 вЂ” Р¤СѓР»-С…Р°СѓСЃ
- *   5 вЂ” Р¤Р»РµС€
- *   4 вЂ” РЎС‚СЂРёС‚
- *   3 вЂ” РЎРµС‚
- *   2 вЂ” Р”РІРµ РїР°СЂС‹
- *   1 вЂ” РџР°СЂР°
- *   0 вЂ” РЎС‚Р°СЂС€Р°СЏ РєР°СЂС‚Р°
- */
-
-/**
- * Р“РµРЅРµСЂРёСЂСѓРµС‚ РІСЃРµ СЃРѕС‡РµС‚Р°РЅРёСЏ РёР· k СЌР»РµРјРµРЅС‚РѕРІ РјР°СЃСЃРёРІР° arr.
- */
 function getCombinations(arr, k) {
     if (k === 0) return [[]];
     if (arr.length < k) return [];
@@ -4857,26 +4569,18 @@ function getCombinations(arr, k) {
     return [...withFirst, ...withoutFirst];
 }
 
-/**
- * РћС†РµРЅРёРІР°РµС‚ СЂРѕРІРЅРѕ 5 РєР°СЂС‚.
- * Р’РѕР·РІСЂР°С‰Р°РµС‚ { rank, score[], name }
- * score РёСЃРїРѕР»СЊР·СѓРµС‚СЃСЏ РґР»СЏ Р»РµРєСЃРёРєРѕРіСЂР°С„РёС‡РµСЃРєРѕРіРѕ СЃСЂР°РІРЅРµРЅРёСЏ СЂСѓРє.
- */
 function evaluateFive(cards) {
-    // Р—РЅР°С‡РµРЅРёСЏ РїРѕ СѓР±С‹РІР°РЅРёСЋ
     const values = cards.map(c => c.value).sort((a, b) => b - a);
     const suits = cards.map(c => c.suit);
 
     const isFlush = new Set(suits).size === 1;
 
-    // РџСЂРѕРІРµСЂРєР° СЃС‚СЂРёС‚Р°
     let isStraight = false;
     let straightHigh = values[0];
 
     if (new Set(values).size === 5 && values[0] - values[4] === 4) {
         isStraight = true;
     }
-    // Р’РµР»РѕСЃРёРїРµРґ: A-2-3-4-5 (С‚РёС…РёР№ СЃС‚СЂРёС‚, С‚СѓР· РёРіСЂР°РµС‚ РєР°Рє 1)
     if (!isStraight &&
         values[0] === 14 && values[1] === 5 &&
         values[2] === 4 && values[3] === 3 && values[4] === 2) {
@@ -4884,17 +4588,13 @@ function evaluateFive(cards) {
         straightHigh = 5;
     }
 
-    // РџРѕРґСЃС‡С‘С‚ РіСЂСѓРїРї РѕРґРёРЅР°РєРѕРІС‹С… Р·РЅР°С‡РµРЅРёР№
     const countMap = {};
     for (const v of values) countMap[v] = (countMap[v] || 0) + 1;
 
-    // РЎРѕСЂС‚РёСЂСѓРµРј РіСЂСѓРїРїС‹: СЃРЅР°С‡Р°Р»Р° РїРѕ РєРѕР»РёС‡РµСЃС‚РІСѓ (desc), Р·Р°С‚РµРј РїРѕ Р·РЅР°С‡РµРЅРёСЋ (desc)
-    // Р­С‚Рѕ РґР°С‘С‚ РїСЂР°РІРёР»СЊРЅС‹Р№ РїРѕСЂСЏРґРѕРє РєРёРєРµСЂРѕРІ РґР»СЏ СЃСЂР°РІРЅРµРЅРёСЏ
     const groups = Object.entries(countMap)
         .map(([v, c]) => ({ value: Number(v), count: c }))
         .sort((a, b) => b.count - a.count || b.value - a.value);
 
-    // ---- РћРїСЂРµРґРµР»СЏРµРј РєРѕРјР±РёРЅР°С†РёСЋ ----
 
     if (isFlush && isStraight) {
         const name = straightHigh === 14 ? 'Р РѕСЏР»-С„Р»РµС€' : 'РЎС‚СЂРёС‚-С„Р»РµС€';
@@ -4946,10 +4646,6 @@ function evaluateFive(cards) {
     return { rank: 0, score: [0, ...values], name: 'РЎС‚Р°СЂС€Р°СЏ РєР°СЂС‚Р°' };
 }
 
-/**
- * РЎСЂР°РІРЅРёРІР°РµС‚ РґРІР° score-РјР°СЃСЃРёРІР° Р»РµРєСЃРёРєРѕРіСЂР°С„РёС‡РµСЃРєРё.
- * Р’РѕР·РІСЂР°С‰Р°РµС‚: < 0 РµСЃР»Рё a Р»СѓС‡С€Рµ, > 0 РµСЃР»Рё b Р»СѓС‡С€Рµ, 0 РµСЃР»Рё РЅРёС‡СЊСЏ.
- */
 function compareScores(a, b) {
     const len = Math.max(a.length, b.length);
     for (let i = 0; i < len; i++) {
@@ -4959,13 +4655,6 @@ function compareScores(a, b) {
     return 0;
 }
 
-/**
- * РќР°С…РѕРґРёС‚ Р»СѓС‡С€СѓСЋ РєРѕРјР±РёРЅР°С†РёСЋ РёР· holeCards + communityCards.
- * holeCards: РјР°СЃСЃРёРІ РёР· 2 РєР°СЂС‚ РёРіСЂРѕРєР°
- * communityCards: РјР°СЃСЃРёРІ РёР· 3-5 РѕР±С‰РёС… РєР°СЂС‚
- *
- * Р’РѕР·РІСЂР°С‰Р°РµС‚ { rank, score, name, bestCards }
- */
 function evaluateBest(holeCards, communityCards) {
     const allCards = [...holeCards, ...communityCards];
     const combos = getCombinations(allCards, 5);
@@ -4980,10 +4669,6 @@ function evaluateBest(holeCards, communityCards) {
     return best;
 }
 
-/**
- * РЎСЂР°РІРЅРёРІР°РµС‚ РґРІРµ СЂСѓРєРё (СЂРµР·СѓР»СЊС‚Р°С‚С‹ evaluateBest).
- * Р’РѕР·РІСЂР°С‰Р°РµС‚ < 0 РµСЃР»Рё handA Р»СѓС‡С€Рµ, > 0 РµСЃР»Рё handB Р»СѓС‡С€Рµ, 0 РµСЃР»Рё СЂР°РІРЅС‹.
- */
 function compareHands(handA, handB) {
     return compareScores(handA.score, handB.score);
 }
@@ -4994,36 +4679,9 @@ module.exports = { evaluateBest, compareHands };
 ФАЙЛ: server\game\potManager.js
 ========================================
 
-/**
- * potManager.js вЂ” СЂР°СЃС‡С‘С‚ Р±Р°РЅРєРѕРІ Рё СЃР°Р№Рґ-РїРѕС‚РѕРІ.
- *
- * РЎР°Р№Рґ-РїРѕС‚С‹ РЅСѓР¶РЅС‹ РєРѕРіРґР° РёРіСЂРѕРє РёРґС‘С‚ РІ РѕР»Р»-РёРЅ РЅР° СЃСѓРјРјСѓ РјРµРЅСЊС€Рµ
- * С‚РµРєСѓС‰РµР№ СЃС‚Р°РІРєРё. РћРЅ РјРѕР¶РµС‚ РІС‹РёРіСЂР°С‚СЊ С‚РѕР»СЊРєРѕ С‚Сѓ С‡Р°СЃС‚СЊ Р±Р°РЅРєР°,
- * РІ РєРѕС‚РѕСЂСѓСЋ РІРЅС‘СЃ РІРєР»Р°Рґ.
- *
- * РџСЂРёРјРµСЂ:
- *   РРіСЂРѕРє A (РѕР»Р»-РёРЅ 100), B (СЃС‚Р°РІРєР° 300), C (СЃС‚Р°РІРєР° 300)
- *   РћСЃРЅРѕРІРЅРѕР№ Р±Р°РЅРє: 100Г—3 = 300  в†’  СѓС‡Р°СЃС‚РІСѓСЋС‚ A, B, C
- *   РЎР°Р№Рґ-РїРѕС‚ 1:  200Г—2 = 400  в†’  СѓС‡Р°СЃС‚РІСѓСЋС‚ B, C
- *
- * РђР»РіРѕСЂРёС‚Рј: СЃРѕСЂС‚РёСЂСѓРµРј РёРіСЂРѕРєРѕРІ РїРѕ СЃСѓРјРјР°СЂРЅРѕРјСѓ РІРєР»Р°РґСѓ (totalContributed),
- * РЅР° РєР°Р¶РґРѕРј СѓСЂРѕРІРЅРµ СЃРѕР·РґР°С‘Рј РїРѕС‚ РёР· СЂР°Р·РЅРёС†С‹ Г— РєРѕР»РёС‡РµСЃС‚РІРѕ РёРіСЂРѕРєРѕРІ РЅР° СЌС‚РѕРј СѓСЂРѕРІРЅРµ.
- */
-
 const { compareHands } = require('./handEvaluator');
 
-/**
- * Р Р°СЃСЃС‡РёС‚С‹РІР°РµС‚ СЃРїРёСЃРѕРє РїРѕС‚РѕРІ РЅР° РѕСЃРЅРѕРІРµ РІРєР»Р°РґРѕРІ РёРіСЂРѕРєРѕРІ.
- *
- * @param {Array} players вЂ” РјР°СЃСЃРёРІ РѕР±СЉРµРєС‚РѕРІ:
- *   { id, totalContributed, folded }
- *   totalContributed вЂ” СЃРєРѕР»СЊРєРѕ С„РёС€РµРє РёРіСЂРѕРє РІР»РѕР¶РёР» Р·Р° РІСЃСЋ СЂР°Р·РґР°С‡Сѓ
- *   folded вЂ” СЃР±СЂРѕСЃРёР» Р»Рё РєР°СЂС‚С‹ (СѓС‡Р°СЃС‚РІСѓРµС‚ РІ РїРѕРїРѕР»РЅРµРЅРёРё, РЅРѕ РЅРµ РІ РІС‹РёРіСЂС‹С€Рµ)
- *
- * @returns {Array} pots вЂ” [{ amount, eligiblePlayerIds[] }]
- */
 function calculatePots(players) {
-    // Р‘РµСЂС‘Рј С‚РѕР»СЊРєРѕ С‚РµС…, РєС‚Рѕ РІР»РѕР¶РёР» С…РѕС‚СЊ С‡С‚Рѕ-С‚Рѕ
     const contributors = players
         .filter(p => p.totalContributed > 0)
         .map(p => ({ ...p })) // РєРѕРїРёСЏ, С‡С‚РѕР±С‹ РЅРµ РјСѓС‚РёСЂРѕРІР°С‚СЊ
@@ -5037,10 +4695,8 @@ function calculatePots(players) {
         const contribution = currentLevel - previousLevel;
 
         if (contribution > 0) {
-            // Р’СЃРµ РѕСЃС‚Р°РІС€РёРµСЃСЏ РёРіСЂРѕРєРё Р·Р°РїР»Р°С‚РёР»Рё РЅР° СЌС‚РѕРј СѓСЂРѕРІРЅРµ
             const potAmount = contribution * contributors.length;
 
-            // РџСЂРµС‚РµРЅРґРѕРІР°С‚СЊ РЅР° РІС‹РёРіСЂС‹С€ РјРѕРіСѓС‚ С‚РѕР»СЊРєРѕ РЅРµ СЃР±СЂРѕСЃРёРІС€РёРµ РєР°СЂС‚С‹
             const eligible = contributors
                 .filter(p => !p.folded)
                 .map(p => p.id);
@@ -5048,7 +4704,6 @@ function calculatePots(players) {
             pots.push({ amount: potAmount, eligiblePlayerIds: eligible });
         }
 
-        // РЈР±РёСЂР°РµРј РІСЃРµС…, РєС‚Рѕ РёСЃС‡РµСЂРїР°Р» СЃРІРѕР№ РІРєР»Р°Рґ РЅР° СЌС‚РѕРј СѓСЂРѕРІРЅРµ
         while (contributors.length > 0 && contributors[0].totalContributed === currentLevel) {
             contributors.shift();
         }
@@ -5059,49 +4714,34 @@ function calculatePots(players) {
     return pots;
 }
 
-/**
- * Р Р°СЃРїСЂРµРґРµР»СЏРµС‚ Р±Р°РЅРєРё РјРµР¶РґСѓ РїРѕР±РµРґРёС‚РµР»СЏРјРё.
- *
- * @param {Array} pots вЂ” СЂРµР·СѓР»СЊС‚Р°С‚ calculatePots
- * @param {Array} evaluations вЂ” [{ playerId, hand }] РґР»СЏ РёРіСЂРѕРєРѕРІ РІ С€РѕСѓРґР°СѓРЅРµ
- *   hand вЂ” СЂРµР·СѓР»СЊС‚Р°С‚ evaluateBest({ score, rank, name })
- *
- * @returns {Object} winnings вЂ” { playerId: amount }
- */
 function distributePots(pots, evaluations) {
     const winnings = {};
 
     for (const pot of pots) {
-        // РўРѕР»СЊРєРѕ РёРіСЂРѕРєРё, РєРѕС‚РѕСЂС‹Рµ РёРјРµСЋС‚ РїСЂР°РІРѕ РЅР° СЌС‚РѕС‚ РїРѕС‚
         const eligible = evaluations.filter(e =>
             pot.eligiblePlayerIds.some(id => String(id) === String(e.playerId))
         );
 
         if (eligible.length === 0) continue;
 
-        // Р•СЃР»Рё С‚РѕР»СЊРєРѕ РѕРґРёРЅ РїСЂРµС‚РµРЅРґРµРЅС‚ вЂ” РѕРЅ Р·Р°Р±РёСЂР°РµС‚ Р°РІС‚РѕРјР°С‚РёС‡РµСЃРєРё
         if (eligible.length === 1) {
             const id = eligible[0].playerId;
             winnings[id] = (winnings[id] || 0) + pot.amount;
             continue;
         }
 
-        // РЎРѕСЂС‚РёСЂСѓРµРј РїРѕ СЃРёР»Рµ СЂСѓРєРё (Р»СѓС‡С€РёРµ вЂ” РїРµСЂРІС‹Рµ)
         eligible.sort((a, b) => compareHands(a.hand, b.hand));
 
-        // РС‰РµРј РїРѕР±РµРґРёС‚РµР»РµР№ (РІРѕР·РјРѕР¶РЅР° РЅРёС‡СЊСЏ)
         const bestHand = eligible[0].hand;
         const winners = eligible.filter(e => compareHands(e.hand, bestHand) === 0);
 
-        // Р”РµР»РёРј РїРѕС‚ РїРѕСЂРѕРІРЅСѓ РјРµР¶РґСѓ РїРѕР±РµРґРёС‚РµР»СЏРјРё
         const share = Math.floor(pot.amount / winners.length);
-        const remainder = pot.amount % winners.length; // РѕСЃС‚Р°С‚РѕРє РѕС‚ РґРµР»РµРЅРёСЏ
+        const remainder = pot.amount % winners.length;
 
         for (const winner of winners) {
             winnings[winner.playerId] = (winnings[winner.playerId] || 0) + share;
         }
 
-        // РћСЃС‚Р°С‚РѕРє С„РёС€РµРє вЂ” РїРµСЂРІРѕРјСѓ РїРѕР±РµРґРёС‚РµР»СЋ (Р±Р»РёР¶Р°Р№С€РµРјСѓ Рє РґРёР»РµСЂСѓ РїРѕ РїРѕР·РёС†РёРё)
         if (remainder > 0) {
             winnings[winners[0].playerId] += remainder;
         }
@@ -5116,18 +4756,12 @@ module.exports = { calculatePots, distributePots };
 ФАЙЛ: server\game\roomManager.js
 ========================================
 
-/**
- * RoomManager.js вЂ” РјРµРЅРµРґР¶РµСЂ РїРѕРєРµСЂРЅС‹С… РєРѕРјРЅР°С‚.
- */
-
 const GameLogic = require('./gameLogic');
 const chipWallet = require('./chipWallet');
 const { saveGameState, loadGameState, deleteGameState } = require('./gameState');
 
 const RESULT_BEFORE_READY_MS = 12000;
 
-// Р’СЂРµРјСЏ РѕР¶РёРґР°РЅРёСЏ РїРµСЂРµРїРѕРґРєР»СЋС‡РµРЅРёСЏ РёРіСЂРѕРєР° (РјСЃ).
-// Р•СЃР»Рё РёРіСЂРѕРє РЅРµ РІРµСЂРЅС‘С‚СЃСЏ Р·Р° СЌС‚Рѕ РІСЂРµРјСЏ вЂ” СѓР±РёСЂР°РµРј СЃРѕ СЃС‚РѕР»Р°.
 const RECONNECT_GRACE_MS = 15000;
 
 class RoomManager {
@@ -5145,9 +4779,9 @@ class RoomManager {
             for (const row of result.rows) {
                 await this.restoreRoom(row.room_id);
             }
-            console.log(`Р’РѕСЃСЃС‚Р°РЅРѕРІР»РµРЅРѕ ${result.rows.length} Р°РєС‚РёРІРЅС‹С… РєРѕРјРЅР°С‚`);
+            console.log(`Восстановлено ${result.rows.length} активных комнат`);
         } catch (err) {
-            console.error('РћС€РёР±РєР° РІРѕСЃСЃС‚Р°РЅРѕРІР»РµРЅРёСЏ РєРѕРјРЅР°С‚:', err);
+            console.error('Ошибка восстановления комнат:', err);
         }
     }
 
@@ -5156,7 +4790,7 @@ class RoomManager {
             const playerId = socket.user.userId;
             const username = socket.user.username;
 
-            console.log(`Socket РїРѕРґРєР»СЋС‡РёР»СЃСЏ: ${username} (${socket.id})`);
+            console.log(`Socket подключился: ${username} (${socket.id})`);
 
             socket.on('create-room', (data, callback) => {
                 const result = this.createRoom(data, playerId, username);
@@ -5188,7 +4822,7 @@ class RoomManager {
             });
 
             socket.on('disconnect', async () => {
-                console.log(`Socket РѕС‚РєР»СЋС‡РёР»СЃСЏ: ${username} (${socket.id})`);
+                console.log(`Socket отключился: ${username} (${socket.id})`);
                 await this._handleDisconnect(socket, playerId, username);
             });
         });
@@ -5198,7 +4832,7 @@ class RoomManager {
         const roomId = `room_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
 
         const config = {
-            roomName: data.roomName || 'РџРѕРєРµСЂРЅС‹Р№ СЃС‚РѕР»',
+            roomName: data.roomName || 'Покерный стол',
             smallBlind: Number(data.smallBlind) || 5,
             bigBlind: Number(data.bigBlind) || 10,
             minBuyIn: Number(data.minBuyIn) || 100,
@@ -5214,13 +4848,13 @@ class RoomManager {
         this.rooms.set(roomId, {
             game,
             config,
-            players: new Map(),        // socketId в†’ playerId
+            players: new Map(),
             readyPlayers: new Set(),
             autoStartTimer: null,
-            disconnectTimers: new Map(), // playerId в†’ С‚Р°Р№РјРµСЂ СѓРґР°Р»РµРЅРёСЏ СЃРѕ СЃС‚РѕР»Р°
+            disconnectTimers: new Map(),
         });
 
-        console.log(`РљРѕРјРЅР°С‚Р° СЃРѕР·РґР°РЅР°: ${roomId} (${config.roomName})`);
+        console.log(`Комната создана: ${roomId} (${config.roomName})`);
         return { ok: true, roomId, config };
     }
 
@@ -5228,19 +4862,17 @@ class RoomManager {
         const { roomId, buyIn, password } = data;
         const room = this.rooms.get(roomId);
 
-        if (!room) return { ok: false, error: 'РљРѕРјРЅР°С‚Р° РЅРµ РЅР°Р№РґРµРЅР°' };
+        if (!room) return { ok: false, error: 'Комната не найдена' };
         if (room.config.password && room.config.password !== password) {
-            return { ok: false, error: 'РќРµРІРµСЂРЅС‹Р№ РїР°СЂРѕР»СЊ' };
+            return { ok: false, error: 'Неверный пароль' };
         }
 
-        // РћС‚РјРµРЅСЏРµРј С‚Р°Р№РјРµСЂ СѓРґР°Р»РµРЅРёСЏ вЂ” РёРіСЂРѕРє РїРµСЂРµРїРѕРґРєР»СЋС‡РёР»СЃСЏ РІРѕРІСЂРµРјСЏ
         if (room.disconnectTimers.has(playerId)) {
             clearTimeout(room.disconnectTimers.get(playerId));
             room.disconnectTimers.delete(playerId);
-            console.log(`РРіСЂРѕРє ${username} РїРµСЂРµРїРѕРґРєР»СЋС‡РёР»СЃСЏ РІРѕРІСЂРµРјСЏ, С‚Р°Р№РјРµСЂ РѕС‚РјРµРЅС‘РЅ`);
+            console.log(`Игрок ${username} переподключился вовремя, таймер отменён`);
         }
 
-        // РџРѕРІС‚РѕСЂРЅРѕРµ РїРѕРґРєР»СЋС‡РµРЅРёРµ вЂ” РёРіСЂРѕРє СѓР¶Рµ Р·Р° СЃС‚РѕР»РѕРј
         const existing = room.game.getPlayer(playerId);
         if (existing) {
             socket.join(roomId);
@@ -5254,7 +4886,6 @@ class RoomManager {
                 room.game._emitTurn();
             }
 
-            // РЎРѕРѕР±С‰Р°РµРј РІСЃРµРј С‡С‚Рѕ РёРіСЂРѕРє РІРµСЂРЅСѓР»СЃСЏ
             socket.to(roomId).emit('player-reconnected', { playerId, username });
 
             return {
@@ -5266,10 +4897,9 @@ class RoomManager {
             };
         }
 
-        // РџРµСЂРІС‹Р№ РІС…РѕРґ вЂ” СЃРїРёСЃС‹РІР°РµРј Р±Р°Р№-РёРЅ
         const actualBuyIn = Number(buyIn);
         if (actualBuyIn < room.config.minBuyIn || actualBuyIn > room.config.maxBuyIn) {
-            return { ok: false, error: `Р‘Р°Р№-РёРЅ РґРѕР»Р¶РµРЅ Р±С‹С‚СЊ РѕС‚ ${room.config.minBuyIn} РґРѕ ${room.config.maxBuyIn}` };
+            return { ok: false, error: `Бай-ин должен быть от ${room.config.minBuyIn} до ${room.config.maxBuyIn}` };
         }
 
         const deduct = await chipWallet.deductChips(playerId, actualBuyIn);
@@ -5281,7 +4911,7 @@ class RoomManager {
         if (seatIdx === -1) {
             await chipWallet.addChips(playerId, actualBuyIn);
             const accountChips = await chipWallet.getBalance(playerId);
-            return { ok: false, error: 'РќРµС‚ СЃРІРѕР±РѕРґРЅС‹С… РјРµСЃС‚', accountChips };
+            return { ok: false, error: 'Нет свободных мест', accountChips };
         }
 
         socket.join(roomId);
@@ -5297,7 +4927,7 @@ class RoomManager {
 
         if (inHand) {
             socket.emit('waiting-next-hand', {
-                message: 'Р Р°Р·РґР°С‡Р° СѓР¶Рµ РёРґС‘С‚. Р’С‹ РїРѕРґРєР»СЋС‡РёС‚РµСЃСЊ Рє СЃР»РµРґСѓСЋС‰РµР№ РїРѕСЃР»Рµ РµС‘ РѕРєРѕРЅС‡Р°РЅРёСЏ.',
+                message: 'Раздача уже идёт. Вы подключитесь к следующей после её окончания.',
             });
         } else {
             this._promptReady(roomId);
@@ -5314,9 +4944,8 @@ class RoomManager {
 
     async leaveRoom(socket, roomId, playerId, { force = false } = {}) {
         const room = this.rooms.get(roomId);
-        if (!room) return { ok: false, error: 'РљРѕРјРЅР°С‚Р° РЅРµ РЅР°Р№РґРµРЅР°' };
+        if (!room) return { ok: false, error: 'Комната не найдена' };
 
-        // РћС‚РјРµРЅСЏРµРј С‚Р°Р№РјРµСЂ РµСЃР»Рё Р±С‹Р»
         if (room.disconnectTimers.has(playerId)) {
             clearTimeout(room.disconnectTimers.get(playerId));
             room.disconnectTimers.delete(playerId);
@@ -5358,7 +4987,7 @@ class RoomManager {
             clearTimeout(room.autoStartTimer);
             this.rooms.delete(roomId);
             await deleteGameState(roomId);
-            console.log(`РљРѕРјРЅР°С‚Р° СѓРґР°Р»РµРЅР°: ${roomId}`);
+            console.log(`Комната удалена: ${roomId}`);
         }
 
         return { ok: true, accountChips: cashOut.chips, cashedOut: tableChips };
@@ -5367,13 +4996,13 @@ class RoomManager {
     handlePlayerAction(data, playerId) {
         const { roomId, action, amount } = data;
         const room = this.rooms.get(roomId);
-        if (!room) return { ok: false, error: 'РљРѕРјРЅР°С‚Р° РЅРµ РЅР°Р№РґРµРЅР°' };
+        if (!room) return { ok: false, error: 'Комната не найдена' };
         return room.game.handleAction(playerId, action, Number(amount) || 0);
     }
 
     getGameState(roomId, playerId) {
         const room = this.rooms.get(roomId);
-        if (!room) return { ok: false, error: 'РљРѕРјРЅР°С‚Р° РЅРµ РЅР°Р№РґРµРЅР°' };
+        if (!room) return { ok: false, error: 'Комната не найдена' };
         return {
             ok: true,
             state: { ...room.game.getStateForPlayer(playerId), roomInfo: this._roomInfo(room) },
@@ -5428,7 +5057,6 @@ class RoomManager {
             }, RESULT_BEFORE_READY_MS);
         }
 
-        // РђРІС‚РѕСЃРѕС…СЂР°РЅРµРЅРёРµ РїРѕСЃР»Рµ РєР°Р¶РґРѕРіРѕ СЃРѕР±С‹С‚РёСЏ
         this._saveRoomState(roomId);
     }
 
@@ -5443,7 +5071,7 @@ class RoomManager {
 
         if (eligible.length < 2) {
             this.io.to(roomId).emit('waiting-for-players', {
-                message: 'Р–РґС‘Рј РјРёРЅРёРјСѓРј 2 РёРіСЂРѕРєРѕРІ СЃ С„РёС€РєР°РјРё...',
+                message: 'Ждём минимум 2 игроков с фишками...',
             });
             return;
         }
@@ -5464,44 +5092,39 @@ class RoomManager {
         const started = room.game.startHand(readyIds);
         if (!started) {
             this.io.to(roomId).emit('waiting-for-players', {
-                message: 'Р–РґС‘Рј РјРёРЅРёРјСѓРј 2 РёРіСЂРѕРєРѕРІ СЃ С„РёС€РєР°РјРё...',
+                message: 'Ждём минимум 2 игроков с фишками...',
             });
         }
     }
 
-    /**
-     * РџСЂРё РґРёСЃРєРѕРЅРЅРµРєС‚Рµ РґР°С‘Рј РёРіСЂРѕРєСѓ RECONNECT_GRACE_MS РјРёР»Р»РёСЃРµРєСѓРЅРґ
-     * РЅР° РїРµСЂРµРїРѕРґРєР»СЋС‡РµРЅРёРµ. Р•СЃР»Рё РЅРµ РІРµСЂРЅСѓР»СЃСЏ вЂ” СѓР±РёСЂР°РµРј СЃРѕ СЃС‚РѕР»Р°.
-     */
     async _handleDisconnect(socket, playerId, username) {
         for (const [roomId, room] of this.rooms.entries()) {
             if (!room.players.has(socket.id)) continue;
 
-            // РЈР±РёСЂР°РµРј СЃРѕРєРµС‚ РёР· РјР°РїРїРёРЅРіР°, РЅРѕ РёРіСЂРѕРєР° РёР· РёРіСЂС‹ РќР• С‚СЂРѕРіР°РµРј
             room.players.delete(socket.id);
 
-            // РЈРІРµРґРѕРјР»СЏРµРј РѕСЃС‚Р°Р»СЊРЅС‹С… Рѕ РІСЂРµРјРµРЅРЅРѕРј РґРёСЃРєРѕРЅРЅРµРєС‚Рµ
+            if (socket.sessionKicked) {
+                console.log(`[Session Kick] ${username} убирается из комнаты ${roomId} немедленно`);
+                await this.leaveRoom(socket, roomId, playerId, { force: true });
+                continue;
+            }
+
             this.io.to(roomId).emit('player-temporarily-disconnected', {
                 playerId,
                 username,
                 reconnectMs: RECONNECT_GRACE_MS,
             });
+            console.log(`${username} отключился, ждём ${RECONNECT_GRACE_MS / 1000}с...`);
 
-            console.log(`${username} РѕС‚РєР»СЋС‡РёР»СЃСЏ, Р¶РґС‘Рј ${RECONNECT_GRACE_MS / 1000}СЃ...`);
-
-            // Р—Р°РїСѓСЃРєР°РµРј С‚Р°Р№РјРµСЂ вЂ” РµСЃР»Рё РЅРµ РІРµСЂРЅС‘С‚СЃСЏ, СѓР±РёСЂР°РµРј СЃРѕ СЃС‚РѕР»Р°
             const timer = setTimeout(async () => {
-                room.disconnectTimers.delete(playerId);
-                console.log(`${username} РЅРµ РїРµСЂРµРїРѕРґРєР»СЋС‡РёР»СЃСЏ, СѓР±РёСЂР°РµРј СЃРѕ СЃС‚РѕР»Р°`);
-
-                // РЎРѕР·РґР°С‘Рј С„РёРєС‚РёРІРЅС‹Р№ СЃРѕРєРµС‚ РґР»СЏ leaveRoom (РёРіСЂРѕРє СѓР¶Рµ РѕС‚РєР»СЋС‡С‘РЅ)
-                const ghostSocket = {
-                    id: `ghost_${playerId}`,
-                    emit: () => {},
-                    leave: () => {},
-                };
-
-                await this.leaveRoom(ghostSocket, roomId, playerId, { force: true });
+            room.disconnectTimers.delete(playerId);
+            console.log(`${username} не переподключился, убираем со стола`);
+            const ghostSocket = {
+                id: `ghost_${playerId}`,
+                emit: () => {},
+                leave: () => {},
+            };
+            await this.leaveRoom(ghostSocket, roomId, playerId, { force: true });
             }, RECONNECT_GRACE_MS);
 
             room.disconnectTimers.set(playerId, timer);
@@ -5581,7 +5204,7 @@ class RoomManager {
                 actedThisStreet: [...room.game.actedThisStreet]
             });
         } catch (err) {
-            console.error(`РћС€РёР±РєР° СЃРѕС…СЂР°РЅРµРЅРёСЏ СЃРѕСЃС‚РѕСЏРЅРёСЏ РєРѕРјРЅР°С‚С‹ ${roomId}:`, err);
+            console.error(`Ошибка сохранения состояния комнаты ${roomId}:`, err);
         }
     }
 
@@ -5615,12 +5238,11 @@ class RoomManager {
             disconnectTimers: new Map(),
         });
 
-        // Р•СЃР»Рё РёРіСЂР° РІ Р°РєС‚РёРІРЅРѕР№ С„Р°Р·Рµ Рё РµСЃС‚СЊ РѕС‡РµСЂРµРґСЊ С…РѕРґРѕРІ вЂ” РѕС‚РїСЂР°РІР»СЏРµРј СЃРѕР±С‹С‚РёРµ Рѕ С‚РµРєСѓС‰РµРј С…РѕРґРµ
         if (game.toAct.length > 0 && !['waiting', 'ended'].includes(game.phase)) {
             game._emitTurn();
         }
 
-        console.log(`РљРѕРјРЅР°С‚Р° РІРѕСЃСЃС‚Р°РЅРѕРІР»РµРЅР°: ${roomId}`);
+        console.log(`Комната восстановлена: ${roomId}`);
         return { ok: true, roomId };
     }
 }
@@ -5631,26 +5253,9 @@ module.exports = RoomManager;
 ФАЙЛ: server\middleware\jwtMiddleware.js
 ========================================
 
-/**
-jwtMiddleware.js — middleware для проверки JWT-токена.
-Содержит две версии:
-expressAuth — для защиты HTTP-маршрутов Express
-socketAuth  — для защиты Socket.io соединений
-После успешной проверки данные пользователя доступны как:
-req.user       (в Express-маршрутах)
-socket.user    (в Socket.io обработчиках)
-*/
 const jwt = require('jsonwebtoken');
 const pool = require('../config/db'); 
 
-/**
-Middleware для Express.
-Ожидает заголовок: Authorization: Bearer <token>
-Пример защищённого маршрута:
-app.get('/api/profile', expressAuth, (req, res) => {
-  res.json(req.user); // { userId, username }
-});
-*/
 async function expressAuth(req, res, next) {
     try {
         let token;
@@ -5658,7 +5263,6 @@ async function expressAuth(req, res, next) {
         if (authHeader && authHeader.startsWith('Bearer ')) {
             token = authHeader.slice(7);
         } else if (req.cookies?.token) {
-            // Запасной вариант — читаем из httpOnly куки (для браузерных запросов)
             token = req.cookies.token;
         }
 
@@ -5668,7 +5272,6 @@ async function expressAuth(req, res, next) {
 
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         
-        // Проверка валидности сессии в БД (защита от одновременных входов)
         const result = await pool.query('SELECT session_token FROM users WHERE id = $1', [decoded.userId]);
         if (result.rows.length === 0 || result.rows[0].session_token !== decoded.sessionToken) {
             res.clearCookie('token');
@@ -5686,37 +5289,26 @@ async function expressAuth(req, res, next) {
     }
 }
 
-/**
-Middleware для Socket.io.
-Подключается через: io.use(socketAuth)
-Ожидает токен в: socket.handshake.auth.token
-Пример на клиенте:
-const socket = io({ auth: { token: localStorage.getItem('token') } });
-После успешной проверки в обработчиках доступно socket.user.
-*/
 async function socketAuth(socket, next) {
     try {
         const token = socket.handshake.auth?.token;
         if (!token) {
-            // next(new Error(...)) — стандартный способ отклонить соединение в Socket.io
             return next(new Error('Authentication error: токен не передан'));
         }
 
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         
-        // Проверка валидности сессии в БД для защиты от одновременных сессий
         const result = await pool.query('SELECT session_token FROM users WHERE id = $1', [decoded.userId]);
         if (result.rows.length === 0 || result.rows[0].session_token !== decoded.sessionToken) {
             return next(new Error('Session expired: вход выполнен с другого устройства'));
         }
 
-        // Сохраняем данные пользователя в объект сокета
         socket.user = {
             userId: decoded.userId,
             username: decoded.username,
         };
 
-        next(); // Разрешаем соединение
+        next();
     } catch (err) {
         return next(new Error('Authentication error: токен недействителен или истёк'));
     }
@@ -5728,21 +5320,15 @@ module.exports = { expressAuth, socketAuth };
 ФАЙЛ: server\routes\authRoutes.js
 ========================================
 
-/**
- * authRoutes.js вЂ” РјР°СЂС€СЂСѓС‚С‹ Р°СѓС‚РµРЅС‚РёС„РёРєР°С†РёРё.
- */
 
 const express = require('express');
 const router = express.Router();
 const { register, login, logout } = require('../controllers/authController');
 
-// POST /api/auth/register вЂ” СЂРµРіРёСЃС‚СЂР°С†РёСЏ
 router.post('/register', register);
 
-// POST /api/auth/login вЂ” РІС…РѕРґ, РїРѕР»СѓС‡РµРЅРёРµ С‚РѕРєРµРЅР° Рё СѓСЃС‚Р°РЅРѕРІРєР° РєСѓРєРё
 router.post('/login', login);
 
-// POST /api/auth/logout вЂ” РІС‹С…РѕРґ, РѕС‡РёСЃС‚РєР° РєСѓРєРё
 router.post('/logout', logout);
 
 module.exports = router;
@@ -5751,17 +5337,11 @@ module.exports = router;
 ФАЙЛ: server\routes\profileRoutes.js
 ========================================
 
-/**
- * profileRoutes.js вЂ” РјР°СЂС€СЂСѓС‚С‹ РїСЂРѕС„РёР»СЏ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ.
- * Р’СЃРµ РјР°СЂС€СЂСѓС‚С‹ Р·Р°С‰РёС‰РµРЅС‹ С‡РµСЂРµР· expressAuth (С‚СЂРµР±СѓСЋС‚ РІР°Р»РёРґРЅС‹Р№ JWT РІ РєСѓРєРµ).
- */
-
 const express = require('express');
 const router = express.Router();
 const { expressAuth } = require('../middleware/jwtMiddleware');
 const { getMe, claimChips, changeUsername, changePassword, deleteAccount } = require('../controllers/profileController');
 
-// РџСЂРёРјРµРЅСЏРµРј expressAuth РєРѕ РІСЃРµРј РјР°СЂС€СЂСѓС‚Р°Рј РїСЂРѕС„РёР»СЏ
 router.use(expressAuth);
 
 router.get('/me', getMe);
@@ -5773,25 +5353,71 @@ router.delete('/', deleteAccount);
 module.exports = router;
 
 ========================================
+ФАЙЛ: server\routes\sessionStream.js
+========================================
+
+const express = require('express');
+const jwt = require('jsonwebtoken');
+const router = express.Router();
+
+const sseClients = new Map();
+
+function notifyUser(userId, event, data) {
+  const clients = sseClients.get(String(userId));
+  if (!clients || clients.size === 0) return;
+  const payload = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
+  for (const res of clients) {
+    try { res.write(payload); } catch {}
+  }
+}
+
+router.get('/stream', (req, res) => {
+  const token = req.cookies?.token;
+  if (!token) return res.sendStatus(401);
+
+  let decoded;
+  try {
+    decoded = jwt.verify(token, process.env.JWT_SECRET);
+  } catch {
+    return res.sendStatus(401);
+  }
+
+  const userId = String(decoded.userId);
+
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.setHeader('X-Accel-Buffering', 'no');
+  res.flushHeaders();
+
+  res.write('event: connected\ndata: {}\n\n');
+
+  if (!sseClients.has(userId)) sseClients.set(userId, new Set());
+  sseClients.get(userId).add(res);
+
+  req.on('close', () => {
+    const set = sseClients.get(userId);
+    if (!set) return;
+    set.delete(res);
+    if (set.size === 0) sseClients.delete(userId);
+  });
+});
+
+module.exports = { router, notifyUser };
+
+========================================
 ФАЙЛ: server\.env
 ========================================
 
-# РЎС‚СЂРѕРєР° РїРѕРґРєР»СЋС‡РµРЅРёСЏ Рє PostgreSQL
 DATABASE_URL=postgresql://postgres:postgres@localhost:5432/poker
 
-# РЎРµРєСЂРµС‚РЅС‹Р№ РєР»СЋС‡ РґР»СЏ РїРѕРґРїРёСЃРё JWT-С‚РѕРєРµРЅРѕРІ
 JWT_SECRET=4717058500cd0fffe2a0260fed2ec0cf67978fbcbd02234e7ed9ca6c5e08acecbe0618abfd9138103dc88b7611d39c5db9caa8c1c5a31c1d6f39e92a5c618f4e
 
-# РџРѕСЂС‚ HTTP-СЃРµСЂРІРµСЂР°
 PORT=3000
 
 ========================================
 ФАЙЛ: server\server.js
 ========================================
-
-/**
- * server.js вЂ” С‚РѕС‡РєР° РІС…РѕРґР° РІ РїСЂРёР»РѕР¶РµРЅРёРµ.
- */
 
 require('dotenv').config({ path: require('path').join(__dirname, '.env') });
 
@@ -5802,37 +5428,49 @@ const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const jwt = require('jsonwebtoken');
 const path = require('path');
-
+const pool = require('./config/db');
 const authRoutes = require('./routes/authRoutes');
 const profileRoutes = require('./routes/profileRoutes');
 const { socketAuth } = require('./middleware/jwtMiddleware');
 const RoomManager = require('./game/roomManager');
+const { router: sessionStreamRouter } = require('./routes/sessionStream');
 
 const app = express();
 const server = http.createServer(app);
 
-// Socket.io
 const io = new Server(server, {
     cors: { origin: '*', methods: ['GET', 'POST'] },
 });
 
-// JWT-РїСЂРѕРІРµСЂРєР° РґР»СЏ РІСЃРµС… Socket.io СЃРѕРµРґРёРЅРµРЅРёР№
 io.use(socketAuth);
 
-// РњРµРЅРµРґР¶РµСЂ РєРѕРјРЅР°С‚ вЂ” СѓРїСЂР°РІР»СЏРµС‚ РёРіСЂРѕРІРѕР№ Р»РѕРіРёРєРѕР№ Рё Socket.io СЃРѕР±С‹С‚РёСЏРјРё
 const roomManager = new RoomManager(io);
 
-// Express middleware
+app.set('io', io);
+
 app.use(cors());
 app.use(express.json());
 app.use(cookieParser());
 
-// Middleware РїСЂРѕРІРµСЂРєРё Р°РІС‚РѕСЂРёР·Р°С†РёРё РїРѕ РєСѓРєР°Рј (РґР»СЏ HTML-СЃС‚СЂР°РЅРёС†)
-function requireAuth(req, res, next) {
+async function requireAuth(req, res, next) {
     const token = req.cookies.token;
     if (!token) return res.redirect('/login');
     try {
-        req.user = jwt.verify(token, process.env.JWT_SECRET);
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+        const result = await pool.query(
+            'SELECT session_token FROM users WHERE id = $1',
+            [decoded.userId]
+        );
+        if (
+            result.rows.length === 0 ||
+            result.rows[0].session_token !== decoded.sessionToken
+        ) {
+            res.clearCookie('token');
+            return res.redirect('/login');
+        }
+
+        req.user = decoded;
         next();
     } catch {
         res.clearCookie('token');
@@ -5840,11 +5478,10 @@ function requireAuth(req, res, next) {
     }
 }
 
-// API РјР°СЂС€СЂСѓС‚С‹
 app.use('/api/auth', authRoutes);
 app.use('/api/profile', profileRoutes);
+app.use('/api/session', sessionStreamRouter);
 
-// РЎРїРёСЃРѕРє РєРѕРјРЅР°С‚ РґР»СЏ Р»РѕР±Р±Рё
 app.get('/api/rooms', requireAuth, (req, res) => {
     res.json(roomManager.getRoomList());
 });
@@ -5855,7 +5492,6 @@ app.post('/api/rooms/create', requireAuth, (req, res) => {
     res.status(201).json(result);
 });
 
-// Р—Р°С‰РёС‰С‘РЅРЅС‹Рµ HTML-РјР°СЂС€СЂСѓС‚С‹ вЂ” СЃС‚РѕСЏС‚ Р”Рћ express.static
 app.get('/create-room', requireAuth, (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'client', 'pages', 'create-room.html'));
 });
@@ -5869,29 +5505,15 @@ app.get('/game', requireAuth, (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'client', 'pages', 'game.html'));
 });
 
-// Р‘Р»РѕРєРёСЂСѓРµРј РїСЂСЏРјРѕР№ РґРѕСЃС‚СѓРї Рє Р·Р°С‰РёС‰С‘РЅРЅС‹Рј .html С„Р°Р№Р»Р°Рј
-const protectedFiles = ['create-room.html', 'connect-to-room.html', 'profile.html', 'game.html'];
-app.use((req, res, next) => {
-    const file = req.path.replace(/^\/\//, '');
-    if (protectedFiles.includes(file)) {
-        // РџСЂРѕРІРµСЂСЏРµРј С‚РѕРєРµРЅ вЂ” РµСЃР»Рё РµСЃС‚СЊ, РїСЂРѕРїСѓСЃРєР°РµРј; РµСЃР»Рё РЅРµС‚, СЂРµРґРёСЂРµРєС‚РёРј
-        const token = req.cookies.token;
-        if (!token) return res.redirect('/login');
-        try {
-            jwt.verify(token, process.env.JWT_SECRET);
-            return next();  // РђРІС‚РѕСЂРёР·РѕРІР°РЅ вЂ” РїСѓСЃС‚СЊ СЃРєР°С‡РёРІР°РµС‚ .html
-        } catch {
-            res.clearCookie('token');
-            return res.redirect('/login');
-        }
+app.use('/pages', (req, res, next) => {
+    if (req.path.endsWith('.html')) {
+        return res.status(404).send('Страница не найдена');
     }
     next();
 });
 
-// РЎС‚Р°С‚РёС‡РµСЃРєРёРµ С„Р°Р№Р»С‹ вЂ” СЃС‚РѕСЏС‚ РџРћРЎР›Р• Р·Р°С‰РёС‰С‘РЅРЅС‹С… РјР°СЂС€СЂСѓС‚РѕРІ
 app.use(express.static(path.join(__dirname, '..', 'client')));
 
-// РџСѓР±Р»РёС‡РЅС‹Рµ HTML-РјР°СЂС€СЂСѓС‚С‹
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'client', 'pages', 'menu.html'));
 });
@@ -5908,448 +5530,13 @@ app.get('/how-to-play', (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'client', 'pages', 'how-to-play.html'));
 });
 
-// Р“Р»РѕР±Р°Р»СЊРЅС‹Р№ РѕР±СЂР°Р±РѕС‚С‡РёРє РѕС€РёР±РѕРє
-// eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {
-    console.error('РќРµРѕР±СЂР°Р±РѕС‚Р°РЅРЅР°СЏ РѕС€РёР±РєР°:', err);
+    console.error('Необработанная ошибка:', err);
     const statusCode = res.statusCode !== 200 ? res.statusCode : 500;
-    res.status(statusCode).json({ error: err.message || 'Р’РЅСѓС‚СЂРµРЅРЅСЏСЏ РѕС€РёР±РєР° СЃРµСЂРІРµСЂР°' });
+    res.status(statusCode).json({ error: err.message || 'Внутренняя ошибка сервера' });
 });
 
-// Р—Р°РїСѓСЃРє
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-    console.log(`РЎРµСЂРІРµСЂ Р·Р°РїСѓС‰РµРЅ РЅР° http://localhost:${PORT}`);
+    console.log(`Сервер запущен на http://localhost:${PORT}`);
 });
-
-========================================
-ФАЙЛ: project_files.txt
-========================================
-
-=== Р¤РђР™Р›Р« РџР РћР•РљРўРђ POKER-GAME ===
-
-================================================================================
-Р¤РђР™Р›: .gitignore
-================================================================================
-node_modules/
-.env
-
-================================================================================
-Р¤РђР™Р›: client/js/auth/forms.js
-================================================================================
-/**
- * Р¤РѕСЂРјС‹ РІС…РѕРґР° Рё СЂРµРіРёСЃС‚СЂР°С†РёРё
- */
-
-import { saveSession, clearSession } from './session.js';
-
-export function initLoginForm() {
-    const loginForm = document.getElementById('login-form');
-    if (!loginForm) return;
-
-    const loginError = document.getElementById('login-error');
-
-    loginForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        loginError.style.display = 'none';
-        const data = Object.fromEntries(new FormData(loginForm).entries());
-
-        if (!data.username || !data.password) {
-            loginError.style.display = 'block';
-            loginError.textContent = 'Р—Р°РїРѕР»РЅРёС‚Рµ РІСЃРµ РїРѕР»СЏ';
-            return;
-        }
-
-        try {
-            const res = await fetch('/api/auth/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'same-origin',
-                body: JSON.stringify({ username: data.username, password: data.password }),
-            });
-            const result = await res.json();
-
-            if (!res.ok) {
-                loginError.style.display = 'block';
-                loginError.textContent = result.error || 'РћС€РёР±РєР° РІС…РѕРґР°';
-                return;
-            }
-
-            saveSession(result.token, result.user);
-            window.location.href = '/menu';
-        } catch {
-            loginError.style.display = 'block';
-            loginError.textContent = 'РћС€РёР±РєР° СЃРѕРµРґРёРЅРµРЅРёСЏ СЃ СЃРµСЂРІРµСЂРѕРј';
-        }
-    });
-}
-
-export function initRegistrationForm() {
-    const regForm = document.getElementById('registration-form');
-    if (!regForm) return;
-
-    const regError = document.getElementById('reg-error');
-    const showRegError = (msg) => { regError.style.display = 'block'; regError.textContent = msg; };
-
-    regForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        regError.style.display = 'none';
-        const data = Object.fromEntries(new FormData(regForm).entries());
-
-        if (!data.username || !data.password || !data.password_confirm) return showRegError('Р—Р°РїРѕР»РЅРёС‚Рµ РІСЃРµ РїРѕР»СЏ');
-        if (data.username.length < 3 || data.username.length > 20) return showRegError('Р›РѕРіРёРЅ РґРѕР»Р¶РµРЅ Р±С‹С‚СЊ РѕС‚ 3 РґРѕ 20 СЃРёРјРІРѕР»РѕРІ');
-        if (data.password !== data.password_confirm) return showRegError('РџР°СЂРѕР»Рё РЅРµ СЃРѕРІРїР°РґР°СЋС‚');
-        if (data.password.length < 6) return showRegError('РџР°СЂРѕР»СЊ РґРѕР»Р¶РµРЅ СЃРѕРґРµСЂР¶Р°С‚СЊ РјРёРЅРёРјСѓРј 6 СЃРёРјРІРѕР»РѕРІ');
-
-        try {
-            const regRes = await fetch('/api/auth/register', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: data.username, password: data.password }),
-            });
-            const regResult = await regRes.json();
-            if (!regRes.ok) return showRegError(regResult.error || 'РћС€РёР±РєР° СЂРµРіРёСЃС‚СЂР°С†РёРё');
-
-            const loginRes = await fetch('/api/auth/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'same-origin',
-                body: JSON.stringify({ username: data.username, password: data.password }),
-            });
-            const loginResult = await loginRes.json();
-            if (!loginRes.ok) { window.location.href = '/login'; return; }
-
-            saveSession(loginResult.token, loginResult.user);
-            window.location.href = '/menu';
-        } catch {
-            showRegError('РћС€РёР±РєР° СЃРѕРµРґРёРЅРµРЅРёСЏ СЃ СЃРµСЂРІРµСЂРѕРј');
-        }
-    });
-}
-
-export async function updateAuthUI() {
-    const profileNav = document.querySelector('.profile-nav ul');
-    if (!profileNav) return;
-
-    const { getToken, fetchCurrentUser, getCurrentUser, clearSession } = await import('./session.js');
-    const user = getToken() ? await fetchCurrentUser() : getCurrentUser();
-
-    if (user && getToken()) {
-        profileNav.innerHTML = `
-        <ul>
-            <li><a href="/profile">${user.username} - ${user.chips} рџЄ™</a></li>
-            <li><a href="#" id="logout-btn">Р’С‹Р№С‚Рё</a></li>
-        </ul>
-        `;
-        document.getElementById('logout-btn')?.addEventListener('click', async (e) => {
-            e.preventDefault();
-            await fetch('/api/auth/logout', { method: 'POST' });
-            clearSession();
-            window.location.href = '/menu';
-        });
-    } else {
-        profileNav.innerHTML = `
-        <ul>
-            <li><a href="/registration">Р—Р°СЂРµРіРёСЃС‚СЂРёСЂРѕРІР°С‚СЊСЃСЏ</a></li>
-            <li><a href="/login">Р’РѕР№С‚Рё</a></li>
-        </ul>
-        `;
-    }
-}
-
-================================================================================
-Р¤РђР™Р›: client/js/auth/session.js
-================================================================================
-/**
- * РЈРїСЂР°РІР»РµРЅРёРµ СЃРµСЃСЃРёРµР№ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ
- */
-
-export function saveSession(token, user) {
-    localStorage.setItem('token', token);
-    localStorage.setItem('currentUser', JSON.stringify(user));
-}
-
-export function clearSession() {
-    localStorage.removeItem('token');
-    localStorage.removeItem('currentUser');
-}
-
-export function getCurrentUser() {
-    try { return JSON.parse(localStorage.getItem('currentUser')); }
-    catch { return null; }
-}
-
-export function getToken() {
-    return localStorage.getItem('token');
-}
-
-export function saveUserFromApi(user) {
-    localStorage.setItem('currentUser', JSON.stringify({
-        id: user.id,
-        username: user.username,
-        chips: user.chips,
-    }));
-}
-
-export async function fetchCurrentUser() {
-    if (!getToken()) return getCurrentUser();
-    try {
-        const res = await fetch('/api/profile/me', { credentials: 'same-origin' });
-        if (res.status === 401) {
-            clearSession();
-            return null;
-        }
-        if (!res.ok) return getCurrentUser();
-        const user = await res.json();
-        saveUserFromApi(user);
-        return user;
-    } catch {
-        return getCurrentUser();
-    }
-}
-
-================================================================================
-Р¤РђР™Р›: client/js/game/actions.js
-================================================================================
-[РЎРѕРґРµСЂР¶РёРјРѕРµ С„Р°Р№Р»Р° actions.js - РєРѕРґ СѓРїСЂР°РІР»РµРЅРёСЏ РґРµР№СЃС‚РІРёСЏРјРё РёРіСЂРѕРєР°]
-
-================================================================================
-Р¤РђР™Р›: client/js/game/cards.js
-================================================================================
-[РЎРѕРґРµСЂР¶РёРјРѕРµ С„Р°Р№Р»Р° cards.js - РєРѕРґ РѕС‚СЂРёСЃРѕРІРєРё РєР°СЂС‚]
-
-================================================================================
-Р¤РђР™Р›: client/js/game/players.js
-================================================================================
-[РЎРѕРґРµСЂР¶РёРјРѕРµ С„Р°Р№Р»Р° players.js - РєРѕРґ РѕС‚СЂРёСЃРѕРІРєРё РёРіСЂРѕРєРѕРІ]
-
-================================================================================
-Р¤РђР™Р›: client/js/game/pot.js
-================================================================================
-[РЎРѕРґРµСЂР¶РёРјРѕРµ С„Р°Р№Р»Р° pot.js - РєРѕРґ СѓРїСЂР°РІР»РµРЅРёСЏ Р±Р°РЅРєРѕРј]
-
-================================================================================
-Р¤РђР™Р›: client/js/game/state.js
-================================================================================
-[РЎРѕРґРµСЂР¶РёРјРѕРµ С„Р°Р№Р»Р° state.js - СЃРѕСЃС‚РѕСЏРЅРёРµ РёРіСЂС‹]
-
-================================================================================
-Р¤РђР™Р›: client/js/game/ui.js
-================================================================================
-[РЎРѕРґРµСЂР¶РёРјРѕРµ С„Р°Р№Р»Р° ui.js - СѓРїСЂР°РІР»РµРЅРёРµ РѕРІРµСЂР»РµСЏРјРё]
-
-================================================================================
-Р¤РђР™Р›: client/js/main-game.js
-================================================================================
-[РЎРѕРґРµСЂР¶РёРјРѕРµ С„Р°Р№Р»Р° main-game.js - РіР»Р°РІРЅС‹Р№ С„Р°Р№Р» РёРіСЂС‹]
-
-================================================================================
-Р¤РђР™Р›: client/js/main.js
-================================================================================
-/**
- * Р“Р»Р°РІРЅС‹Р№ С„Р°Р№Р» РєР»РёРµРЅС‚Р° - РёРЅРёС†РёР°Р»РёР·Р°С†РёСЏ РІСЃРµС… РјРѕРґСѓР»РµР№
- */
-
-import { initLoginForm, initRegistrationForm, updateAuthUI } from './auth/forms.js';
-import { initCreateRoomForm } from './utils/create-room.js';
-import { initLobby } from './utils/lobby.js';
-import { initProfile } from './utils/profile.js';
-
-document.addEventListener('DOMContentLoaded', () => {
-    updateAuthUI();
-    initLoginForm();
-    initRegistrationForm();
-    initCreateRoomForm();
-    initLobby();
-    initProfile();
-});
-
-================================================================================
-Р¤РђР™Р›: client/js/utils/create-room.js
-================================================================================
-[РЎРѕРґРµСЂР¶РёРјРѕРµ С„Р°Р№Р»Р° create-room.js]
-
-================================================================================
-Р¤РђР™Р›: client/js/utils/lobby.js
-================================================================================
-[РЎРѕРґРµСЂР¶РёРјРѕРµ С„Р°Р№Р»Р° lobby.js]
-
-================================================================================
-Р¤РђР™Р›: client/js/utils/logger.js
-================================================================================
-/**
- * Р›РѕРі СЃРѕР±С‹С‚РёР№ РёРіСЂС‹
- */
-
-export function addLog(text, type = 'action') {
-    const container = document.getElementById('game-log-entries');
-    if (!container) return;
-
-    const div = document.createElement('div');
-    div.className = `log-entry ${type === 'win' ? 'log-win' : type === 'system' ? 'log-system' : ''}`;
-    div.textContent = text;
-    container.appendChild(div);
-
-    container.scrollTop = container.scrollHeight;
-
-    while (container.children.length > 100) {
-        container.removeChild(container.firstChild);
-    }
-}
-
-================================================================================
-Р¤РђР™Р›: client/js/utils/profile.js
-================================================================================
-[РЎРѕРґРµСЂР¶РёРјРѕРµ С„Р°Р№Р»Р° profile.js]
-
-================================================================================
-Р¤РђР™Р›: client/pages/connect-to-room.html
-================================================================================
-[HTML РєРѕРґ СЃС‚СЂР°РЅРёС†С‹ РїРѕРґРєР»СЋС‡РµРЅРёСЏ Рє РєРѕРјРЅР°С‚Рµ]
-
-================================================================================
-Р¤РђР™Р›: client/pages/create-room.html
-================================================================================
-[HTML РєРѕРґ СЃС‚СЂР°РЅРёС†С‹ СЃРѕР·РґР°РЅРёСЏ РєРѕРјРЅР°С‚С‹]
-
-================================================================================
-Р¤РђР™Р›: client/pages/game.html
-================================================================================
-[HTML РєРѕРґ РёРіСЂРѕРІРѕР№ СЃС‚СЂР°РЅРёС†С‹]
-
-================================================================================
-Р¤РђР™Р›: client/pages/how-to-play.html
-================================================================================
-[HTML РєРѕРґ СЃС‚СЂР°РЅРёС†С‹ РїСЂР°РІРёР»]
-
-================================================================================
-Р¤РђР™Р›: client/pages/login.html
-================================================================================
-[HTML РєРѕРґ СЃС‚СЂР°РЅРёС†С‹ РІС…РѕРґР°]
-
-================================================================================
-Р¤РђР™Р›: client/pages/menu.html
-================================================================================
-[HTML РєРѕРґ РіР»Р°РІРЅРѕРіРѕ РјРµРЅСЋ]
-
-================================================================================
-Р¤РђР™Р›: client/pages/profile.html
-================================================================================
-[HTML РєРѕРґ СЃС‚СЂР°РЅРёС†С‹ РїСЂРѕС„РёР»СЏ]
-
-================================================================================
-Р¤РђР™Р›: client/pages/registration.html
-================================================================================
-[HTML РєРѕРґ СЃС‚СЂР°РЅРёС†С‹ СЂРµРіРёСЃС‚СЂР°С†РёРё]
-
-================================================================================
-Р¤РђР™Р›: client/styles/game.css
-================================================================================
-[CSS СЃС‚РёР»Рё РґР»СЏ РёРіСЂРѕРІРѕР№ СЃС‚СЂР°РЅРёС†С‹]
-
-================================================================================
-Р¤РђР™Р›: client/styles/styles.css
-================================================================================
-[РћСЃРЅРѕРІРЅС‹Рµ CSS СЃС‚РёР»Рё]
-
-================================================================================
-Р¤РђР™Р›: server/config/db.js
-================================================================================
-[РљРѕРґ РїРѕРґРєР»СЋС‡РµРЅРёСЏ Рє Р±Р°Р·Рµ РґР°РЅРЅС‹С…]
-
-================================================================================
-Р¤РђР™Р›: server/controllers/authController.js
-================================================================================
-[РљРѕРЅС‚СЂРѕР»Р»РµСЂ Р°СѓС‚РµРЅС‚РёС„РёРєР°С†РёРё]
-
-================================================================================
-Р¤РђР™Р›: server/controllers/profileController.js
-================================================================================
-[РљРѕРЅС‚СЂРѕР»Р»РµСЂ РїСЂРѕС„РёР»СЏ]
-
-================================================================================
-Р¤РђР™Р›: server/game/chipWallet.js
-================================================================================
-[РЈРїСЂР°РІР»РµРЅРёРµ Р±Р°Р»Р°РЅСЃРѕРј С„РёС€РµРє]
-
-================================================================================
-Р¤РђР™Р›: server/game/deck.js
-================================================================================
-[РљРѕР»РѕРґР° РєР°СЂС‚]
-
-================================================================================
-Р¤РђР™Р›: server/game/gameLogic.js
-================================================================================
-[РћСЃРЅРѕРІРЅР°СЏ РёРіСЂРѕРІР°СЏ Р»РѕРіРёРєР°]
-
-================================================================================
-Р¤РђР™Р›: server/game/gameState.js
-================================================================================
-[РЎРѕС…СЂР°РЅРµРЅРёРµ СЃРѕСЃС‚РѕСЏРЅРёСЏ РёРіСЂС‹]
-
-================================================================================
-Р¤РђР™Р›: server/game/handEvaluator.js
-================================================================================
-[РћС†РµРЅРєР° РїРѕРєРµСЂРЅС‹С… РєРѕРјР±РёРЅР°С†РёР№]
-
-================================================================================
-Р¤РђР™Р›: server/game/potManager.js
-================================================================================
-[РЈРїСЂР°РІР»РµРЅРёРµ Р±Р°РЅРєР°РјРё Рё СЃР°Р№Рґ-РїРѕС‚Р°РјРё]
-
-================================================================================
-Р¤РђР™Р›: server/game/roomManager.js
-================================================================================
-[РњРµРЅРµРґР¶РµСЂ РїРѕРєРµСЂРЅС‹С… РєРѕРјРЅР°С‚]
-
-================================================================================
-Р¤РђР™Р›: server/middleware/jwtMiddleware.js
-================================================================================
-[JWT middleware РґР»СЏ Р°СѓС‚РµРЅС‚РёС„РёРєР°С†РёРё]
-
-================================================================================
-Р¤РђР™Р›: server/package.json
-================================================================================
-{
-  "name": "server",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
-  "dependencies": {
-    "bcryptjs": "^3.0.3",
-    "cookie-parser": "^1.4.7",
-    "cors": "^2.8.6",
-    "dotenv": "^17.4.2",
-    "express": "^5.2.1",
-    "jsonwebtoken": "^9.0.3",
-    "pg": "^8.20.0",
-    "socket.io": "^4.8.3"
-  }
-}
-
-================================================================================
-Р¤РђР™Р›: server/routes/authRoutes.js
-================================================================================
-[РњР°СЂС€СЂСѓС‚С‹ Р°СѓС‚РµРЅС‚РёС„РёРєР°С†РёРё]
-
-================================================================================
-Р¤РђР™Р›: server/routes/profileRoutes.js
-================================================================================
-[РњР°СЂС€СЂСѓС‚С‹ РїСЂРѕС„РёР»СЏ]
-
-================================================================================
-Р¤РђР™Р›: server/server.js
-================================================================================
-[Р“Р»Р°РІРЅС‹Р№ С„Р°Р№Р» СЃРµСЂРІРµСЂР°]
-
-================================================================================
-РљРћРќР•Р¦ Р¤РђР™Р›Рђ
-================================================================================
-

@@ -9,6 +9,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const pool = require('../config/db');
+const { notifyUser } = require('../routes/sessionStream');
 
 /**
  * Регистрация нового пользователя.
@@ -95,6 +96,23 @@ async function login(req, res, next) {
             'UPDATE users SET session_token = $1 WHERE id = $2',
             [sessionToken, user.id]
         );
+
+        notifyUser(user.id, 'session-kicked', { reason: 'Выполнен вход с другого устройства' });
+
+        const io = req.app.get('io');
+        if (io) {
+            const userId = String(user.id);
+            for (const [, socket] of io.sockets.sockets) {
+                if (socket.user && String(socket.user.userId) === userId) {
+                // Отправляем событие и отключаем сокет.
+                // socket.disconnect(true) автоматически вызовет RoomManager._handleDisconnect,
+                // что для наблюдателей будет выглядеть как стандартное "отключение игрока".
+                    socket.emit('session-kicked', { reason: 'Выполнен вход с другого устройства' });
+                    socket.sessionKicked = true;
+                    socket.disconnect(true);
+                 }
+            }
+        }
 
         // Генерация JWT-токена с session_token
         const token = jwt.sign(

@@ -11,11 +11,12 @@ const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const jwt = require('jsonwebtoken');
 const path = require('path');
-
+const pool = require('./config/db');
 const authRoutes = require('./routes/authRoutes');
 const profileRoutes = require('./routes/profileRoutes');
 const { socketAuth } = require('./middleware/jwtMiddleware');
 const RoomManager = require('./game/roomManager');
+const { router: sessionStreamRouter } = require('./routes/sessionStream');
 
 const app = express();
 const server = http.createServer(app);
@@ -31,17 +32,34 @@ io.use(socketAuth);
 // Менеджер комнат — управляет игровой логикой и Socket.io событиями
 const roomManager = new RoomManager(io);
 
+// Делаем io доступным в контроллерах через req.app.get('io')
+app.set('io', io);
+
 // Express middleware
 app.use(cors());
 app.use(express.json());
 app.use(cookieParser());
 
-// Middleware проверки авторизации по кукам (для HTML-страниц)
-function requireAuth(req, res, next) {
+async function requireAuth(req, res, next) {
     const token = req.cookies.token;
     if (!token) return res.redirect('/login');
     try {
-        req.user = jwt.verify(token, process.env.JWT_SECRET);
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+        // Проверяем session_token в БД
+        const result = await pool.query(
+            'SELECT session_token FROM users WHERE id = $1',
+            [decoded.userId]
+        );
+        if (
+            result.rows.length === 0 ||
+            result.rows[0].session_token !== decoded.sessionToken
+        ) {
+            res.clearCookie('token');
+            return res.redirect('/login');
+        }
+
+        req.user = decoded;
         next();
     } catch {
         res.clearCookie('token');
@@ -52,6 +70,7 @@ function requireAuth(req, res, next) {
 // API маршруты
 app.use('/api/auth', authRoutes);
 app.use('/api/profile', profileRoutes);
+app.use('/api/session', sessionStreamRouter);
 
 // Список комнат для лобби
 app.get('/api/rooms', requireAuth, (req, res) => {
@@ -79,20 +98,9 @@ app.get('/game', requireAuth, (req, res) => {
 });
 
 // Блокируем прямой доступ к защищённым .html файлам
-const protectedFiles = ['create-room.html', 'connect-to-room.html', 'profile.html', 'game.html'];
-app.use((req, res, next) => {
-    const file = req.path.replace(/^\/\//, '');
-    if (protectedFiles.includes(file)) {
-        // Проверяем токен — если есть, пропускаем; если нет, редиректим
-        const token = req.cookies.token;
-        if (!token) return res.redirect('/login');
-        try {
-            jwt.verify(token, process.env.JWT_SECRET);
-            return next();  // Авторизован — пусть скачивает .html
-        } catch {
-            res.clearCookie('token');
-            return res.redirect('/login');
-        }
+app.use('/pages', (req, res, next) => {
+    if (req.path.endsWith('.html')) {
+        return res.status(404).send('Страница не найдена');
     }
     next();
 });
