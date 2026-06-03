@@ -49,23 +49,12 @@ export function initLobby() {
                 <div class="stake-val hide-mobile">${room.smallBlind}/${room.bigBlind}</div>
                 <div class="hide-mobile">${room.minBuyIn}–${room.maxBuyIn}</div>
                 <div class="hide-mobile">${PHASE_LABELS[room.phase] || room.phase}</div>
-                <div>
-                    <button class="btn-join-small" data-room-id="${room.roomId}">Войти</button>
-                </div>
             </div>
         `).join('');
 
         tableListContainer.querySelectorAll('.table-row').forEach(row => {
             row.addEventListener('click', () => {
                 const room = rooms.find(r => r.roomId === row.dataset.roomId);
-                if (room) selectRoom(room);
-            });
-        });
-
-        tableListContainer.querySelectorAll('.btn-join-small').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const room = rooms.find(r => r.roomId === btn.dataset.roomId);
                 if (room) selectRoom(room);
             });
         });

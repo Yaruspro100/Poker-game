@@ -9,10 +9,8 @@ export function startSessionMonitor() {
     // Если уже запущен — не дублируем
     if (eventSource) return;
 
-    // БАГ 2 ИСПРАВЛЕН: присваиваем во внешнюю переменную, не const
     eventSource = new EventSource('/api/session/stream');
 
-    // БАГ 1 ИСПРАВЛЕН: слушаем 'session-kicked', а не 'kick'
     eventSource.addEventListener('session-kicked', (event) => {
         try {
             const data = JSON.parse(event.data);
